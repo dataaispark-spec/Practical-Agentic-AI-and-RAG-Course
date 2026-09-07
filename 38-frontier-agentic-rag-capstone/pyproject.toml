@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aegisai-frontier-capstone"
+version = "0.1.0"
+description = "Production-oriented Agentic RAG capstone"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["app"]
+testpaths = ["tests"]
+addopts = "-q"
