@@ -283,6 +283,18 @@ A completed learner should be able to point to:
 - deployment manifests
 - a continuously evolving capstone
 
+## QA and deep-practice implementation
+
+The repository now includes a formal 38-module QA standard and a module-specific deep-practice implementation pack. These are used to prevent the common failure mode of having a notebook that exists but is too shallow to teach engineering judgment.
+
+- `00-course-roadmap/COURSE-QA-AUDIT-AND-UPGRADE-PLAN.md` — definition of done and audit matrix
+- `00-course-roadmap/COLAB-PRACTICE-NOTEBOOK-STANDARD.md` — required Colab learning sequence
+- `00-course-roadmap/MODULE-DEEP-PRACTICE-IMPLEMENTATION-PACK.md` — module-by-module BUILD/TRY/BREAK/MEASURE/DEFEND targets
+- `00-course-roadmap/course_qa_checker.py` — executable structural QA checker
+- `.github/workflows/course-qa.yml` — CI check for repository learning signals
+
+The QA checker is deliberately non-blocking during the upgrade phase. Once all modules satisfy the contract, CI can be switched to `--strict`. Structural QA is explicitly different from notebook execution QA.
+
 ## Source and extension policy
 
 The IITM Pravartak curriculum is treated as the source curriculum for the core module sequencing and terminology. Practical implementation, engineering exercises, benchmarks, security labs, frontier-agent material, and interview preparation are course extensions and should be read as such.
@@ -291,7 +303,10 @@ The IITM Pravartak curriculum is treated as the source curriculum for the core m
 
 - Core course architecture: established
 - Frontier roadmap: established
-- Modules 31–38: chapter specifications established
-- Module 37: computer-use / always-on worker specification established
-- Module 38: integrated frontier capstone specification established
-- Next engineering phase: convert the specifications into runnable code, tests, evaluation assets, failure labs, diagrams, deployment artifacts, and progressive AegisAI implementations
+- Modules 1–38: canonical module structure and Colab notebooks present
+- Deep-practice upgrade specification: implemented across all 38 modules
+- Structural QA automation: implemented
+- Module 6 duplicate directories: retained pending deliberate merge of their useful material
+- Notebook execution validation: still requires a dedicated runtime/CI pass and is **not** claimed as complete
+
+The next implementation priority is to close module-specific QA gaps, execute notebook/test validation, and only then enable strict CI completion gates.
