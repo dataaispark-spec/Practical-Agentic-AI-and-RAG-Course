@@ -1,0 +1,16 @@
+name: Course QA
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  structural-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run 38-module structural QA
+        run: python 00-course-roadmap/course_qa_checker.py
