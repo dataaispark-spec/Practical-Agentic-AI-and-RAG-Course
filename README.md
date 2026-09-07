@@ -1,10 +1,10 @@
 # Practical Agentic AI and RAG Course
 
-> **Industry-oriented companion course and hands-on engineering lab** built around the IITM Pravartak Agentic AI & RAG curriculum.
+> **Industry-oriented companion course and hands-on engineering lab** built around the IITM Pravartak Agentic AI & RAG curriculum, extended into frontier agent engineering.
 
-This repository is the practical engineering workspace for a 30-module Agentic AI and RAG learning journey. The source curriculum provides the academic/module structure; this repository extends that structure with production-style implementation, experiments, debugging, evaluation, security, system design, and interview preparation.
+This repository is the practical engineering workspace for a 38-module learning journey. The first 30 modules preserve the core IITM-aligned progression; Modules 31–38 extend it into loop engineering, harness engineering, long-running agents, skills and memory, environments and verifiers, controlled self-improvement, computer use, always-on workers, and the integrated AegisAI capstone.
 
-## Why this course exists
+## Course philosophy
 
 Many AI courses teach APIs and frameworks first. Real engineering work starts earlier:
 
@@ -13,11 +13,34 @@ Many AI courses teach APIs and frameworks first. Real engineering work starts ea
 - What information must be grounded?
 - What can the model be trusted to decide?
 - What actions may the system take?
+- Who owns the agent's authority?
+- How does the system stop, recover and resume?
+- How do we verify that the task really succeeded?
 - How do we measure quality before and after a change?
 - How do we debug a probabilistic system from production evidence?
 - How do we control latency, reliability, security, privacy, and cost?
 
 This course trains those decisions first and the frameworks second.
+
+## Core mental model
+
+```text
+Agent
+ = Model
+ + Harness
+ + Environment
+ + Tools
+ + State
+ + Policy
+ + Verification
+ + Evaluation
+```
+
+The central principle is:
+
+> **LLMs are probabilistic; production software is contractual.**
+>
+> The engineering discipline comes from the control layer between those worlds: schemas, validation, retrieval, policies, tests, retries, budgets, observability, evaluation, security, and operational limits.
 
 ## Learning contract
 
@@ -27,80 +50,57 @@ Learners are expected to:
 2. Implement a working baseline.
 3. Break the system intentionally.
 4. Diagnose the failure from evidence.
-5. Measure the relevant quality, latency, reliability, safety, and cost dimensions.
+5. Measure quality, latency, reliability, safety, and cost.
 6. Improve the design.
 7. Document trade-offs.
 8. Defend the implementation in an interview-style discussion.
 
 Completion is evidence-based: GitHub artifacts, tests, experiment results, architecture decisions, and mastery assessments matter more than passive lesson completion.
 
-## Visual mental model
-
-```text
-                 BUSINESS PROBLEM
-                        |
-                        v
-                 SYSTEM REQUIREMENTS
-                        |
-              +---------+---------+
-              |                   |
-              v                   v
-          KNOWLEDGE            ACTION
-              |                   |
-              v                   v
-             RAG                AGENT
-              |                   |
-              +---------+---------+
-                        |
-                        v
-                  LLM / MODEL
-                        |
-          +-------------+-------------+
-          |             |             |
-          v             v             v
-      Guardrails     Evaluation    Observability
-          |             |             |
-          +-------------+-------------+
-                        |
-                        v
-                    PRODUCTION
-```
-
 ## Continuous capstone: AegisAI
 
-Across the modules we evolve a single platform, **AegisAI**, from a simple AI system into an enterprise-grade Agentic RAG platform.
+Across the modules we evolve a single platform, **AegisAI**, from a simple AI system into a governed enterprise Agentic RAG and autonomous-work platform.
 
 ```text
-User
-  |
-  v
-API Gateway --> Auth / Tenant Context --> Router
-                                    |
-                    +---------------+---------------+
-                    |               |               |
-                  Simple           RAG            Agent
-                    |               |               |
-                    v               v               v
-                   LLM       Retrieval Stack      Planner
-                                  |                 |
-                           +------+-----+        Tools
-                           |            |
-                        Vector       Reranker
-                           |            |
-                           +-----+------+ 
-                                 |
-                                LLM
-                                 |
-                  +--------------+--------------+
-                  |              |              |
-               Memory       Guardrails      Evaluator
-                  |              |              |
-                  +--------------+--------------+
-                                 |
-                             Response
+User / Event
+     |
+     v
+Gateway -> Auth / Tenant -> Task Contract -> Router
+                                      |
+                  +-------------------+------------------+
+                  |                   |                  |
+                Simple               RAG                Agent
+                                      |                  |
+                          Retrieval / Reranker        Harness
+                                      |                  |
+                                      +--------+---------+
+                                               |
+                  +----------------------------+-------------------------+
+                  |             |              |             |           |
+                Tools        Memory         Skills        Computer     MCP
+                  |             |              |            Use          |
+                  +-------------+--------------+-------------+------------+
+                                               |
+                                         Policy Engine
+                                               |
+                                       Agent Loop Engine
+                                               |
+                                      Verification / Eval
+                                               |
+                           +-------------------+------------------+
+                           |                                      |
+                       Approval                               Recovery
+                           |                                      |
+                           +-------------------+------------------+
+                                               |
+                                            Result
+                                               |
+                              Audit / Observability / Metrics
+                                               |
+                                      Controlled Improvement
 ```
 
-## 30-module progression
+## 38-module progression
 
 ### Foundation
 
@@ -150,6 +150,49 @@ API Gateway --> Auth / Tenant Context --> Router
 29. **Deployment + CI/CD** — Production Deployment Pipeline
 30. **Enterprise Agentic RAG Capstone** — Complete AegisAI Platform
 
+### Frontier Agent Engineering
+
+31. **Loop Engineering** — Production Agent Loop Engine
+32. **Harness Engineering** — AegisAI Agent Harness
+33. **Long-Running & Autonomous Agents** — Durable Autonomous Worker
+34. **Skills, Memory & Continual Harnesses** — Self-Improving AegisAI
+35. **Environments, Verifiers & Agentic RL** — Agent Training Environment
+36. **Recursive / Self-Improving Agents** — Research Agent Harness
+37. **Computer Use & Always-On AI Teammates** — Enterprise Digital Worker
+38. **Frontier Agentic RAG Capstone** — AegisAI Autonomous Enterprise Platform
+
+## Frontier control plane
+
+The frontier modules share a common control-plane model:
+
+```text
+Goal
+ ↓
+Loop
+ ↓
+State
+ ↓
+Tools
+ ↓
+Policy
+ ↓
+Budget
+ ↓
+Verification
+ ↓
+Recovery
+ ↓
+Evaluation
+ ↓
+Improvement
+ ↓
+Security
+ ↓
+Audit
+```
+
+Every autonomous capability must answer all twelve questions.
+
 ## Module anatomy
 
 Every module follows the same engineering loop:
@@ -172,6 +215,45 @@ Problem
   -> Mastery gate
 ```
 
+## Engineering ladder
+
+```text
+L1 Explain
+L2 Implement
+L3 Debug
+L4 Optimize
+L5 Design
+L6 Defend trade-offs
+L7 Solve unfamiliar problems
+```
+
+The objective is to move repeatedly through all seven levels.
+
+## Failure-first engineering
+
+The course deliberately injects failures including:
+
+- bad retrieval
+- stale and duplicate knowledge
+- hallucination
+- malformed tool calls
+- infinite loops
+- no-progress loops
+- tool timeouts
+- worker crashes
+- stale checkpoints
+- approval expiry
+- unauthorized actions
+- prompt injection
+- credential leakage
+- UI drift
+- distributed coordination failures
+- cost explosions
+- evaluator gaming
+- self-improvement regressions
+
+Every failure should become an observable incident with a root cause, containment strategy, recovery path and regression test.
+
 ## Interview readiness
 
 Every module includes:
@@ -185,16 +267,6 @@ Every module includes:
 - communication/behavioral prompts
 
 The course does **not** guarantee that a learner will pass every interview. It is designed to make interview preparation concrete through working systems, measurements, failure analysis, and defensible engineering decisions.
-
-## Core engineering principle
-
-> **LLMs are probabilistic; production software is contractual.**
->
-> The engineering discipline comes from the control layer between those worlds: schemas, validation, retrieval, policies, tests, retries, observability, evaluation, security, and operational limits.
-
-## Source and extension policy
-
-The IITM Pravartak curriculum is treated as the source curriculum for module sequencing and terminology. Practical implementation, engineering exercises, benchmarks, security labs, and interview material in this repository are course extensions and should be read as such.
 
 ## GitHub learning evidence
 
@@ -211,8 +283,15 @@ A completed learner should be able to point to:
 - deployment manifests
 - a continuously evolving capstone
 
-## Current status
+## Source and extension policy
 
-- Introduction: established
-- Module 1: reference chapter established
-- Modules 2–30: staged expansion using the Module 1 template
+The IITM Pravartak curriculum is treated as the source curriculum for the core module sequencing and terminology. Practical implementation, engineering exercises, benchmarks, security labs, frontier-agent material, and interview preparation are course extensions and should be read as such.
+
+## Current build status
+
+- Core course architecture: established
+- Frontier roadmap: established
+- Modules 31–38: chapter specifications established
+- Module 37: computer-use / always-on worker specification established
+- Module 38: integrated frontier capstone specification established
+- Next engineering phase: convert the specifications into runnable code, tests, evaluation assets, failure labs, diagrams, deployment artifacts, and progressive AegisAI implementations
