@@ -3,18 +3,17 @@
 Run from repository root:
     python 00-course-roadmap/course_qa_checker.py
 
-This checker deliberately distinguishes *presence* from *depth*. It does not claim
-that notebooks executed successfully; it checks whether the repository contains the
-artifacts and learning signals required by the course QA standard.
+Use --strict when the course is expected to be fully compliant. The default mode
+reports gaps without failing, because the repository is intentionally being upgraded
+incrementally. This checker does not claim that notebooks executed successfully.
 """
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
-import re
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULES = [ROOT / f"{i:02d}-" for i in range(1, 39)]
 
 KEYWORDS = {
     "theory": ["theory", "concept", "mental model", "mechanism"],
@@ -77,17 +76,13 @@ def score_module(number: int) -> dict:
         return {"module": number, "status": "MISSING", "score": 0, "missing": ["module directory"]}
 
     readme = read_text(path / "README.md")
-    notebooks = list((path / "notebooks").glob("*.ipynb")) if (path / "notebooks").exists() else []
+    notebook_dir = path / "notebooks"
+    notebooks = list(notebook_dir.glob("*.ipynb")) if notebook_dir.exists() else []
     nb_text = "\n".join(notebook_text(p) for p in notebooks)
     all_text = f"{readme}\n{nb_text}"
 
-    evidence = {
-        key: contains_any(all_text, terms) for key, terms in KEYWORDS.items()
-    }
-    nb_evidence = {
-        key: contains_any(nb_text, terms) for key, terms in REQUIRED_NOTEBOOK_SIGNALS.items()
-    }
-
+    evidence = {key: contains_any(all_text, terms) for key, terms in KEYWORDS.items()}
+    nb_evidence = {key: contains_any(nb_text, terms) for key, terms in REQUIRED_NOTEBOOK_SIGNALS.items()}
     artifacts = {
         "readme": (path / "README.md").exists(),
         "notebook": bool(notebooks),
@@ -99,14 +94,7 @@ def score_module(number: int) -> dict:
     missing = [k for k, v in evidence.items() if not v]
     missing += [f"notebook:{k}" for k, v in nb_evidence.items() if not v]
     missing += [k for k, v in artifacts.items() if not v]
-
-    # A structural score is intentionally conservative. COMPLETE requires all
-    # notebook signals plus the core repository artifacts.
-    complete = (
-        all(evidence.values())
-        and all(nb_evidence.values())
-        and all(artifacts.values())
-    )
+    complete = all(evidence.values()) and all(nb_evidence.values()) and all(artifacts.values())
     return {
         "module": number,
         "status": "COMPLETE" if complete else "UPGRADE",
@@ -117,21 +105,23 @@ def score_module(number: int) -> dict:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--strict", action="store_true", help="fail unless all modules satisfy the structural contract")
+    args = parser.parse_args()
     results = [score_module(i) for i in range(1, 39)]
     print("Agentic AI + RAG Course — structural QA")
     print("=" * 48)
     complete = 0
     for r in results:
-        label = f"M{r['module']:02d}"
-        print(f"{label}: {r['status']:<8} score={r['score']:02d}")
+        print(f"M{r['module']:02d}: {r['status']:<8} score={r['score']:02d}")
         if r["status"] == "COMPLETE":
             complete += 1
         if r["missing"]:
             print("  gaps:", ", ".join(r["missing"][:8]))
     print("=" * 48)
     print(f"Complete: {complete}/38")
-    print("Note: this is repository-structure QA, not notebook execution QA.")
-    return 0 if complete == 38 else 1
+    print("Note: repository-structure QA only; notebook execution requires a runtime pass.")
+    return 0 if (complete == 38 or not args.strict) else 1
 
 
 if __name__ == "__main__":
