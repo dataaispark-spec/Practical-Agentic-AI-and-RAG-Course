@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, os
+import argparse, os, sys
 from pathlib import Path
 import nbformat
 from nbclient import NotebookClient
@@ -19,7 +19,13 @@ def main():
     for n,p in notebooks(range(start,end+1)):
         total+=1; print(f'EXECUTE M{n:02d}: {p.relative_to(ROOT)}')
         try:
-            nb=nbformat.read(p,as_version=4); NotebookClient(nb,timeout=args.timeout,kernel_name='python3',resources={'metadata':{'path':str(p.parent)}}).execute(); print(f'PASS M{n:02d}: {p.name}')
+            nb=nbformat.read(p,as_version=4)
+            module_root=p.parent.parent
+            existing=os.environ.get('PYTHONPATH','')
+            os.environ['PYTHONPATH']=str(module_root)+(os.pathsep+existing if existing else '')
+            client=NotebookClient(nb,timeout=args.timeout,kernel_name='python3',resources={'metadata':{'path':str(p.parent)}})
+            client.execute()
+            print(f'PASS M{n:02d}: {p.name}')
         except Exception as exc:
             failures.append((n,p,str(exc))); print(f'FAIL M{n:02d}: {p.name}: {exc}')
             if not args.continue_on_error: break
