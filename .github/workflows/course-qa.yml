@@ -25,7 +25,6 @@ jobs:
       matrix:
         module: [04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38]
     env:
-      PYTHONPATH: ${{ github.workspace }}
       MOCK_LLM: 'true'
       OPENAI_API_KEY: ''
       ANTHROPIC_API_KEY: ''
@@ -46,7 +45,10 @@ jobs:
             echo "dir=$(find . -maxdepth 1 -type d -name '${{ matrix.module }}-*' -print -quit | sed 's#^./##')" >> "$GITHUB_OUTPUT"
           fi
       - name: Run module tests
-        run: pytest -q "${{ steps.resolve.outputs.dir }}/tests"
+        shell: bash
+        run: |
+          DIR="${{ steps.resolve.outputs.dir }}"
+          PYTHONPATH="$DIR:$DIR/app:${PYTHONPATH:-}" pytest -q "$DIR/tests"
 
   notebook-runtime:
     runs-on: ubuntu-latest
@@ -66,7 +68,7 @@ jobs:
       - name: Install notebook QA dependencies
         run: python -m pip install -r requirements-dev.txt
       - name: Execute module notebook(s)
-        run: python 00-course-roadmap/run_notebook_qa.py --modules "${{ matrix.module }}-${{ matrix.module }}" --timeout 300 --continue-on-error
+        run: python 00-course-roadmap/run_notebook_qa.py --modules "${{ matrix.module }}-${{ matrix.module }}" --timeout 300
 
   final-qa-gate:
     if: always()
