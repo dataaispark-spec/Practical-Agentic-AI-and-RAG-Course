@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - name: Compile all course Python sources
+        run: python -m compileall -q 00-course-roadmap 00-course-toolkit 01-ai-systems-thinking 02-python-ai-engineering 03-fastapi-testing 04-llm-application-foundations 05-prompting-evaluation 06-rag-from-first-principles 07-embeddings-vector-db 08-document-intelligence-pii 09-advanced-retrieval 10-rag-optimization 11-rag-evaluation 12-rag-debugging 13-tool-calling-api-agents 14-raw-agent-loop 15-memory 16-langgraph-stateful-workflows 17-planning-human-in-the-loop 18-agent-security 19-multi-agent-reality-check 20-multi-agent-architectures 21-coordination-fault-tolerance 22-multi-agent-debugging 23-mcp-fundamentals 24-mcp-server-enterprise 25-observability 26-production-evaluation 27-cost-engineering 28-responsible-ai-governance 29-deployment-cicd 30-enterprise-agentic-rag-capstone 31-knowledge-engineering-graph-rag 32-graph-engineering-temporal-knowledge 33-agentic-knowledge-graph-construction 34-graph-vector-hybrid-retrieval 35-compounding-knowledge-llm-wiki 36-loop-engineering 37-harness-engineering 38-long-running-autonomous-agents 39-skills-memory-continual-harnesses 40-environments-verifiers-agentic-rl 41-recursive-self-improving-agents 42-computer-use-always-on-ai-teammates 43-frontier-graph-rag-agentic-capstone
       - name: Run canonical 43-module structural QA
         run: python 00-course-roadmap/course_qa_checker.py --strict
 
@@ -47,7 +49,7 @@ jobs:
               06) DIR="06-rag-from-first-principles";;
               31) DIR="31-knowledge-engineering-graph-rag";;
               32) DIR="32-graph-engineering-temporal-knowledge";;
-              33) DIR="33-agentic-knowledge-graph-construction";;
+              33) DIR="agentic-knowledge-graph-construction";;
               34) DIR="34-graph-vector-hybrid-retrieval";;
               35) DIR="35-compounding-knowledge-llm-wiki";;
               36) DIR="36-loop-engineering";;
