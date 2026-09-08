@@ -4,44 +4,7 @@
 
 This repository follows a **43-module canonical learning journey**. Modules 1–30 preserve the core progression. Modules 31–35 add a dedicated knowledge-engineering track; Modules 36–42 build progressively autonomous agent runtimes; Module 43 integrates the complete system.
 
-## Core philosophy
-
-This is not an API-tour course. The repeated engineering question is:
-
-> **What must be deterministic around a probabilistic model to make the system reliable?**
-
-Frameworks come after mechanisms. Learners implement, test, break, debug, measure, optimize and defend each major capability.
-
-## Mental model
-
-```text
-Agent
- = Model
- + Harness
- + Environment
- + Tools
- + State
- + Policy
- + Verification
- + Evaluation
- + Improvement
-```
-
-### Two graphs
-
-```text
-Knowledge Graph              Agent / Task Graph
-what the system knows        how the system works
-entities                     goals
-relations                    states
-claims                       transitions
-provenance                   tools/workers
-validity/time                recovery/approval
-```
-
-The final architecture uses both. Neither graph is an authorization boundary.
-
-## 43-module progression
+## Canonical 43-module progression
 
 ### Foundation — Modules 1–5
 1. AI Systems Thinking & Architecture Decisions
@@ -102,51 +65,35 @@ The final architecture uses both. Neither graph is an authorization boundary.
 42. Computer Use & Always-On Teammates
 43. **Frontier Graph-RAG Agentic Capstone**
 
-## Canonical physical layout
+## Canonical implementation paths
 
-The `course-43-modules-complete` branch makes the 43-module curriculum visible as numbered directories. Modules 1–30 and 31–35 use their existing canonical directories. Modules 36–43 are physical mirrors of the mature former 31–38 implementations, preserving all existing apps, tests, exercises, notebooks and capstone assets while exposing canonical 36–43 paths.
+The canonical 43-module numbering is authoritative. Existing mature frontier implementations are retained under their former paths where necessary; the compatibility map explicitly resolves canonical modules 36–43 to those implementations. This avoids deleting tested material merely to rename directories.
 
-The detailed path contract is maintained in `00-course-roadmap/CANONICAL-43-MODULE-MAP.md`, and the branch completion manifest is in `00-course-roadmap/43-MODULE-COMPLETION-MANIFEST.md`.
+See:
 
-## Knowledge-engineering progression
+- `00-course-roadmap/CANONICAL-43-MODULE-MAP.md`
+- `00-course-roadmap/43-MODULE-COMPLETION-MANIFEST.md`
+- `00-course-roadmap/GRAPH-ENGINEERING-TRACK.md`
+
+## Graph engineering
+
+The course deliberately teaches **two different graphs**:
 
 ```text
-30 Enterprise Agentic RAG Capstone
-        ↓
-31 Knowledge Engineering & Graph RAG
-        ↓
-32 Graph Engineering & Temporal Knowledge
-        ↓
-33 Agentic Knowledge Graph Construction
-        ↓
-34 Graph + Vector Hybrid Retrieval
-        ↓
-35 Compounding Knowledge / LLM Wiki
-        ↓
-36 Loop Engineering
-        ↓
-37 Harness Engineering
-        ↓
-38 Long-Running Autonomous Agents
-        ↓
-39 Skills, Memory & Continual Harnesses
-        ↓
-40 Environments, Verifiers & Agentic RL
-        ↓
-41 Recursive Self-Improving Agents
-        ↓
-42 Computer Use & Always-On Teammates
-        ↓
-43 Frontier Graph-RAG Agentic Capstone
+Knowledge Graph              Agent / Task Graph
+what the system knows        how the system works
+entities                     goals
+relations                    states
+claims                       transitions
+provenance                   tools/workers
+validity/time                recovery/approval
 ```
 
-The progression is intentional: **Know → Retrieve → Construct → Connect → Compound → Reason → Operate → Persist → Learn → Improve → Act.**
+Modules 31–35 cover ontology/schema design, entities, relations, claims, provenance, temporal validity, entity resolution, contradiction handling, bounded traversal, graph poisoning, tenant/ACL isolation, graph/vector hybrid retrieval, GraphRAG evaluation, graph health and compounding knowledge.
 
-## Graph engineering definition of done
+The progression is:
 
-Modules 31–35 collectively cover ontology/schema design, entities, relations, claims, provenance, temporal validity, entity resolution, contradiction handling, bounded traversal, graph poisoning, tenant/ACL isolation, graph/vector hybrid retrieval, GraphRAG evaluation, graph health and compounding knowledge.
-
-Learners must benchmark vector-only vs graph-only vs hybrid approaches and document when a graph is **not** justified.
+**Know → Retrieve → Construct → Connect → Compound → Reason → Operate → Persist → Learn → Improve → Act.**
 
 ## Frontier control plane
 
@@ -158,45 +105,40 @@ Goal → Loop → State → Tools → Policy → Budget
  → Improvement → Security → Audit
 ```
 
+Mental model:
+
+```text
+Agent = Model + Harness + Environment + Tools + State
+      + Policy + Verification + Evaluation + Improvement
+```
+
 ## Failure-first engineering
 
-The course intentionally injects retrieval failures, stale/poisoned knowledge, malformed tools, prompt injection, memory poisoning, tenant leakage, infinite loops, retry storms, worker crashes, stale checkpoints, duplicate side effects, distributed coordination failures, cost explosions, reward hacking, benchmark leakage, UI drift and unsafe autonomous actions.
+Labs intentionally inject retrieval failures, stale/poisoned knowledge, malformed tools, prompt injection, memory poisoning, tenant leakage, infinite loops, retry storms, worker crashes, stale checkpoints, duplicate side effects, coordination failures, cost explosions, reward hacking, benchmark leakage, UI drift and unsafe autonomous actions.
 
 Every meaningful failure should produce an observable incident, root cause, containment/recovery path and regression test.
 
-## Learning contract
-
-For every module:
-
-1. Understand the mechanism.
-2. Build a working baseline.
-3. Run tests and Colab examples.
-4. Break it intentionally.
-5. Debug from evidence.
-6. Measure quality, operations and security.
-7. Improve it.
-8. Document trade-offs.
-9. Defend the design in interview/system-design discussion.
-
-## Continuous capstone — AegisAI
-
-AegisAI evolves from a simple AI application into a governed enterprise Agentic RAG and autonomous-work platform containing retrieval, knowledge graph, hybrid GraphRAG, memory, skills, MCP, tools, harness, durable workers, verification, evaluation, governance and computer use.
-
-## Colab standard
+## Colab / hands-on contract
 
 Every canonical module is expected to provide executable practice following:
 
 **Predict → Run → Observe → Explain → Break → Debug → Measure → Improve → Defend**
 
-The repository includes structural QA and clean-kernel notebook runtime QA. A notebook's existence is not treated as proof of runtime correctness or pedagogical completeness.
+The repository's notebook runner executes notebooks in a clean kernel and module-local Python path. Notebook existence alone is not treated as proof of runtime correctness.
 
-## QA
+## QA and restart status
 
-- `00-course-roadmap/course_qa_checker.py --strict` — canonical 43-module structural gate
-- `00-course-roadmap/run_notebook_qa.py` — clean-kernel notebook execution
-- `.github/workflows/course-qa.yml` — structural + module-test + notebook-runtime + aggregate gates
+The repository contains a 43-module structural gate, module-test matrix, notebook-runtime matrix and final aggregate gate:
 
-The course is **not QA-certified** until the complete current 43-module matrix passes.
+- `00-course-roadmap/course_qa_checker.py --strict`
+- `00-course-roadmap/run_notebook_qa.py`
+- `.github/workflows/course-qa.yml`
+
+**Refresh checkpoint: 2026-09-09.** This commit intentionally refreshes the canonical course contract on `main` and triggers a fresh GitHub Actions validation run. The course must not be described as QA-certified until the complete current matrix passes.
+
+## Continuous capstone — AegisAI
+
+AegisAI evolves from a simple AI application into a governed enterprise Agentic RAG and autonomous-work platform containing retrieval, knowledge graph, hybrid GraphRAG, memory, skills, MCP, tools, harness, durable workers, verification, evaluation, governance and computer use.
 
 ## Engineering principles
 
