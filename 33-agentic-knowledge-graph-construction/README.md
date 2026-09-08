@@ -2,6 +2,7 @@
 
 
 
+
 Teach agents to construct and maintain knowledge graphs safely: extract → resolve → propose → validate → approve → commit → monitor → rollback.
 
 ## Core topics

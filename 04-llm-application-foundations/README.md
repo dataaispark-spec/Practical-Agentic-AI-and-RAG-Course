@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Build the control layer that decides **which model should handle a request** while keeping application logic independent from provider SDKs. The router introduces capability matching, health-aware fallback, cost/latency policy, structured outputs, and measurable routing decisions.
 

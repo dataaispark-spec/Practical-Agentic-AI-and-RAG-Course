@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Build retrieval-augmented generation without hiding the important mechanics behind a framework. You will implement a small RAG engine from raw text through chunking, vector representation, similarity search, evidence selection, prompt assembly, and grounded answer generation.
 

@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Move prompting from “try wording until it looks good” to an engineering discipline: define task contracts, create representative datasets, run repeatable evaluations, classify failures, and prevent regressions.
 

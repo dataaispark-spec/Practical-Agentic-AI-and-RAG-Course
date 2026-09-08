@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Build memory as an engineered subsystem—not as “put everything into the prompt.” The goal is to decide what should be remembered, how it is retrieved, when it expires, how it is corrected, and how access is controlled.
 

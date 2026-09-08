@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Turn an LLM from a text generator into a controlled system that can request real operations through typed, validated and authorized tools.
 

@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Move from basic vector search to production retrieval: lexical + dense retrieval, metadata constraints, rank fusion, reranking, query transformation, contextual compression, and retrieval diagnostics.
 

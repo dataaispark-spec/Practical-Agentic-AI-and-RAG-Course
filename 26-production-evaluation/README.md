@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 
 Turn AegisAI evaluation into an engineering release gate. A system is not production-ready because one demo looks good; it must remain good across representative tasks, adversarial cases, versions, tenants and cost/latency constraints.

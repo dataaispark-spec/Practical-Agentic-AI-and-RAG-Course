@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Build an enterprise document pipeline that converts messy source material into trustworthy, traceable, permission-aware knowledge while treating PII and sensitive content as security boundaries.
 

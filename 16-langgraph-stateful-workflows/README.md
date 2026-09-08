@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Move from a raw agent loop to explicit graph orchestration. The learner should understand **why** graph state, nodes, edges, checkpoints and interrupts exist before relying on a framework abstraction.
 

@@ -2,6 +2,7 @@
 
 
 
+
 Build production-minded graph foundations: ontology evolution, entity identity, provenance, temporal validity, supersession, contradiction detection, bounded traversal and graph health.
 
 ## Labs

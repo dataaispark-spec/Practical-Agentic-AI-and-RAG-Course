@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 
 Debug multi-agent systems as distributed systems with probabilistic decision points. The objective is to move from **"the answer is wrong"** to a reproducible causal explanation:

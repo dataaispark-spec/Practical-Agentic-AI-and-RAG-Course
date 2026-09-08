@@ -2,6 +2,7 @@
 
 
 
+
 Build a maintained knowledge workspace in which new evidence updates existing knowledge instead of creating an ever-growing pile of disconnected documents.
 
 > This is **Karpathy-inspired compounding knowledge**, not a claim of an official Karpathy methodology.

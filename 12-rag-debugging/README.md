@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 Learn to debug RAG as an observable distributed pipeline instead of blaming the LLM.
 

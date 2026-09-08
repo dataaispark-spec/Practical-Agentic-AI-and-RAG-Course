@@ -2,6 +2,7 @@
 
 
 
+
 ## Module purpose
 
 This module establishes the most important habit in practical AI engineering: **choose the system architecture from the problem and constraints, not from the popularity of a framework**.

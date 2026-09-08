@@ -2,6 +2,7 @@
 
 
 
+
 ## Mission
 
 Turn the Module 23 client boundary into a governed enterprise capability server. The server owns capability contracts and safe execution mechanics; the surrounding AegisAI control plane owns identity, authorization, approval, audit, budgets and verification.
