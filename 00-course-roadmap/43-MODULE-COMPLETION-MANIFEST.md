@@ -1,6 +1,6 @@
 # 43-Module Completion Branch
 
-This branch is the canonical physical layout of the 43-module Agentic AI & RAG Engineering course.
+This branch is the canonical 43-module learning branch. The numbered directories `01`–`43` are the authoritative curriculum paths. Legacy frontier directories from the former 31–38 numbering are retained only as compatibility copies and must not receive new learning content.
 
 ## Canonical sequence
 
@@ -53,18 +53,27 @@ This branch is the canonical physical layout of the 43-module Agentic AI & RAG E
 42. Computer Use & Always-On AI Teammates
 43. Frontier Graph-RAG Agentic Capstone
 
-## Physical repository contract
+## Completion contract
 
-Every module is expected to expose its teaching material plus executable engineering assets. The mature frontier implementations from the previous numbering are physically mirrored into their canonical 36–43 directories on this branch so the GitHub tree visibly matches the 43-module curriculum.
+Every canonical module must provide learning material and executable engineering evidence appropriate to its subject:
 
-## Quality contract
+`Learning objectives → README theory → app/lab → executable notebook → exercises → tests → failure/debugging → metrics/evaluation → security → mastery gate`
 
-- Ready-to-execute notebooks are part of the course deliverable.
-- Labs/exercises and tests are part of the engineering learning loop.
-- Failure-first debugging is required.
-- Module tests and clean-kernel notebook runtime checks are required before QA certification.
-- CI must be treated as a gate, not as documentation.
+A notebook's existence is not evidence of pedagogical completeness; the content must demonstrate the module objectives through executable practice where applicable.
 
-## Migration note
+## QA contract
 
-The old frontier directories are intentionally retained in this branch for compatibility while canonical paths are validated. They can be removed in a later cleanup commit only after all references and CI paths are proven canonical.
+The branch is not considered QA-certified until:
+
+1. structural 43-module QA passes;
+2. module tests pass;
+3. clean-kernel notebook runtime tests pass;
+4. objective-to-artifact alignment QA passes;
+5. canonical module identity checks pass;
+6. the final aggregate CI gate passes.
+
+## Duplicate-path policy
+
+`06-rag-first-principles/` is a deprecated duplicate; `06-rag-from-first-principles/` is authoritative.
+
+Former frontier directories `31-loop-engineering/` through `38-frontier-agentic-rag-capstone/` are compatibility copies only. New work belongs in canonical `36-loop-engineering/` through `43-frontier-graph-rag-agentic-capstone/`.
