@@ -7,6 +7,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PYTHON_VERSION: '3.11'
+
 jobs:
   structural-qa:
     runs-on: ubuntu-latest
@@ -14,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Run 38-module structural QA
         run: python 00-course-roadmap/course_qa_checker.py
 
@@ -23,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38]
+        module: ['04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38']
     env:
       MOCK_LLM: 'true'
       OPENAI_API_KEY: ''
@@ -32,17 +35,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install runtime QA dependencies
         run: python -m pip install -r requirements-dev.txt
       - name: Run module tests
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${{ matrix.module }}" = "06" ]; then
+          MODULE_NUM="${{ matrix.module }}"
+          if [ "$MODULE_NUM" = "06" ]; then
             DIR="06-rag-from-first-principles"
           else
-            DIR="$(find . -maxdepth 1 -type d -name '${{ matrix.module }}-*' -print -quit | sed 's#^./##')"
+            DIR="$(find . -maxdepth 1 -type d -name "${MODULE_NUM}-*" -print -quit | sed 's#^./##')"
           fi
           test -n "$DIR"
           test -d "$DIR/tests"
@@ -54,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38]
+        module: ['04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38']
     env:
       MOCK_LLM: 'true'
       OPENAI_API_KEY: ''
@@ -63,7 +67,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install notebook QA dependencies
         run: python -m pip install -r requirements-dev.txt
       - name: Execute module notebook(s)
