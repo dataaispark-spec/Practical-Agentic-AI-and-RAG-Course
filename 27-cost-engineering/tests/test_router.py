@@ -1,3 +1,5 @@
+import pytest
+
 from app.router import Budget, BudgetExceeded, Requirements, Route, choose, cost_per_success, feasible, retry_amplification
 
 
@@ -36,4 +38,4 @@ def test_cost_per_success():
 
 
 def test_retry_cost():
-    assert retry_amplification(3,.1)==.3
+    assert retry_amplification(3,.1)==pytest.approx(.3)
