@@ -2,7 +2,7 @@
 
 > Industry-oriented companion course and hands-on engineering lab built around the IITM Pravartak Agentic AI & RAG curriculum and extended into knowledge engineering, GraphRAG and frontier agent engineering.
 
-This repository now follows a **43-module canonical learning journey**. Modules 1–30 preserve the core progression. Modules 31–35 add a dedicated knowledge-engineering track; Modules 36–42 build progressively autonomous agent runtimes; Module 43 integrates the complete system.
+This repository follows a **43-module canonical learning journey**. Modules 1–30 preserve the core progression. Modules 31–35 add a dedicated knowledge-engineering track; Modules 36–42 build progressively autonomous agent runtimes; Module 43 integrates the complete system.
 
 ## Core philosophy
 
@@ -102,6 +102,12 @@ The final architecture uses both. Neither graph is an authorization boundary.
 42. Computer Use & Always-On Teammates
 43. **Frontier Graph-RAG Agentic Capstone**
 
+## Canonical physical layout
+
+The `course-43-modules-complete` branch makes the 43-module curriculum visible as numbered directories. Modules 1–30 and 31–35 use their existing canonical directories. Modules 36–43 are physical mirrors of the mature former 31–38 implementations, preserving all existing apps, tests, exercises, notebooks and capstone assets while exposing canonical 36–43 paths.
+
+The detailed path contract is maintained in `00-course-roadmap/CANONICAL-43-MODULE-MAP.md`, and the branch completion manifest is in `00-course-roadmap/43-MODULE-COMPLETION-MANIFEST.md`.
+
 ## Knowledge-engineering progression
 
 ```text
@@ -183,14 +189,6 @@ Every canonical module is expected to provide executable practice following:
 **Predict → Run → Observe → Explain → Break → Debug → Measure → Improve → Defend**
 
 The repository includes structural QA and clean-kernel notebook runtime QA. A notebook's existence is not treated as proof of runtime correctness or pedagogical completeness.
-
-## Canonical mapping / compatibility
-
-Because the repository already contained mature frontier implementations under the former Modules 31–38, those implementations are preserved as implementation assets while the canonical numbering advances to 43 modules. The explicit compatibility map is maintained in:
-
-`00-course-roadmap/CANONICAL-43-MODULE-MAP.md`
-
-This avoids silently deleting working material during the curriculum migration.
 
 ## QA
 
