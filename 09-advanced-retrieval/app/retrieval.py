@@ -25,12 +25,18 @@ def tokenize(text: str) -> list[str]:
     return [x.lower() for x in TOKEN_RE.findall(text)]
 
 
+def _validate_k(k: int) -> None:
+    if k < 1:
+        raise ValueError("k must be >= 1")
+
+
 def bm25(docs: list[Doc], query: str, k: int = 5, k1: float = 1.5, b: float = 0.75) -> list[Hit]:
+    _validate_k(k)
     q = tokenize(query)
-    if not q or not docs or k < 1:
+    if not q or not docs:
         return []
     lengths = [len(tokenize(d.text)) for d in docs]
-    avgdl = sum(lengths) / max(len(lengths), 1)
+    avgdl = sum(lengths) / len(lengths)
     df = Counter()
     for d in docs:
         df.update(set(tokenize(d.text)))
@@ -69,7 +75,8 @@ def cosine(a: list[float], b: list[float]) -> float:
 
 
 def dense(docs: list[Doc], query: str, k: int = 5) -> list[Hit]:
-    if k < 1 or not docs:
+    _validate_k(k)
+    if not docs:
         return []
     q = embed(query)
     hits = [Hit(d.doc_id, cosine(q, embed(d.text)), "dense") for d in docs]
@@ -87,14 +94,23 @@ def rrf(*ranked_lists: Iterable[Hit], k: int = 60, limit: int = 5) -> list[Hit]:
 
 
 def filter_metadata(hits: Iterable[Hit], docs: list[Doc], required: dict[str, str]) -> list[Hit]:
-    """Deterministic entitlement filter; call before context construction."""
+    """Filter an already-ranked candidate list; use secure_hybrid_retrieve for pre-retrieval ACLs."""
     by_id = {d.doc_id: d for d in docs}
     return [h for h in hits if h.doc_id in by_id and all(by_id[h.doc_id].metadata.get(key) == value for key, value in required.items())]
 
 
+def secure_hybrid_retrieve(docs: list[Doc], query: str, required: dict[str, str], candidate_k: int = 20, limit: int = 5) -> list[Hit]:
+    """Apply deterministic metadata/tenant constraints before candidate truncation and fusion."""
+    _validate_k(candidate_k)
+    _validate_k(limit)
+    authorized = [d for d in docs if all(d.metadata.get(key) == value for key, value in required.items())]
+    lexical = bm25(authorized, query, min(candidate_k, len(authorized))) if authorized else []
+    semantic = dense(authorized, query, min(candidate_k, len(authorized))) if authorized else []
+    return rrf(lexical, semantic, limit=limit)
+
+
 def rerank(hits: Iterable[Hit], docs: list[Doc], query: str, limit: int = 5) -> list[Hit]:
-    if limit < 1:
-        return []
+    _validate_k(limit)
     q = set(tokenize(query))
     by_id = {d.doc_id: d for d in docs}
     rescored = []
