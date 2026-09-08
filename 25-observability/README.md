@@ -1,6 +1,7 @@
 # Module 25 — Observability
 
 
+
 ## Mission
 
 Build the telemetry control plane for AegisAI. Observe an AI system end-to-end rather than treating the LLM as a black box.

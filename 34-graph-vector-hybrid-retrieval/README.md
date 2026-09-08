@@ -1,6 +1,7 @@
 # Module 34 — Graph + Vector Hybrid Retrieval
 
 
+
 Compare retrieval strategies rather than assuming GraphRAG is superior. Build a deterministic benchmark for vector-only, graph-only, reciprocal-rank fusion and graph+vector+reranking.
 
 ## Labs

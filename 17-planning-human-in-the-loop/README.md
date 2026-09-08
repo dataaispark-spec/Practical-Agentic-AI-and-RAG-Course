@@ -1,6 +1,7 @@
 # Module 17 — Planning + Human-in-the-Loop
 
 
+
 ## Mission
 Turn a goal into an executable, verifiable plan while keeping humans in control when risk, uncertainty, cost, or policy requires it.
 

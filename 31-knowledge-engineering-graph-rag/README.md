@@ -1,6 +1,7 @@
 # Module 31 — Knowledge Engineering & Graph RAG
 
 
+
 ## Purpose
 
 Move from unstructured retrieval to explicit, inspectable knowledge. Build a vendor-neutral GraphRAG baseline and learn when graph structure adds value over vector retrieval.

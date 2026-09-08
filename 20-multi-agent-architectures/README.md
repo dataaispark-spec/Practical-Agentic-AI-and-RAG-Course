@@ -1,6 +1,7 @@
 # Module 20 — Multi-Agent Architectures
 
 
+
 ## Mission
 
 Turn the architectural decision from Module 19 into an engineered multi-agent runtime. Build a supervisor/worker system with explicit contracts, bounded delegation, capability isolation, deadlines, retries, partial-failure recovery, verification and observability.

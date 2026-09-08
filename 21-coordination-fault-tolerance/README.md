@@ -1,6 +1,7 @@
 # Module 21 — Coordination + Fault Tolerance
 
 
+
 ## Mission
 
 Move from a supervisor/worker prototype to a distributed agent network that can coordinate under delays, duplicates, crashes, disagreement and partial outages.

@@ -1,6 +1,7 @@
 # Module 7 — Embeddings + Vector DB
 
 
+
 ## Mission
 Move from a toy vector index to production-grade vector retrieval engineering. The learner compares embedding models, similarity functions, exact search and approximate nearest-neighbor (ANN) indexes, metadata filtering, indexing lifecycle, recall/latency trade-offs, and vector-database architecture.
 

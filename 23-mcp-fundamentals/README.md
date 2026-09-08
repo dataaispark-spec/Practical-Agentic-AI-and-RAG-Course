@@ -1,6 +1,7 @@
 # Module 23 — MCP Fundamentals
 
 
+
 ## Mission
 
 Learn the protocol boundary between an agent and external capabilities. Build an educational MCP-style client from first principles before using an SDK.

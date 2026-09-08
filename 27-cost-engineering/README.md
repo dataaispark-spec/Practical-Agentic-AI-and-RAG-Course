@@ -1,6 +1,7 @@
 # Module 27 — Cost Engineering
 
 
+
 ## Mission
 
 Make economics a first-class control signal. Route each task to the least expensive architecture that can satisfy quality, latency, safety and capability requirements.

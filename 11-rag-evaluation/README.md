@@ -1,6 +1,7 @@
 # Module 11 — RAG Evaluation
 
 
+
 ## Mission
 Build an evaluation system that tells you **whether retrieval and generation actually improved**, instead of relying on demos or subjective inspection.
 

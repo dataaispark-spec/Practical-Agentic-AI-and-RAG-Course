@@ -1,6 +1,7 @@
 # Module 3 — FastAPI + Testing
 
 
+
 ## Mission
 Turn the Python AI client from Module 2 into a production-shaped HTTP service. The focus is not FastAPI syntax; it is **API contracts, validation, dependency boundaries, streaming, cancellation, errors, testing, and operational behavior**.
 

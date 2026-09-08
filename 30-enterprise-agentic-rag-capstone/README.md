@@ -1,6 +1,7 @@
 # Module 30 — Enterprise Agentic RAG Capstone
 
 
+
 ## Mission
 Integrate Modules 1–29 into a production-shaped enterprise Agentic RAG platform. This capstone is the first complete AegisAI system before the dedicated Knowledge Engineering/GraphRAG and frontier autonomy track in Modules 31–43.
 

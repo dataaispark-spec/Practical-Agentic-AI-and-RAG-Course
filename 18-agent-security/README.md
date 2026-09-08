@@ -1,6 +1,7 @@
 # Module 18 — Agent Security
 
 
+
 ## Mission
 
 Build a security control plane for an agent that can reason, retrieve information, call tools, use memory, and take consequential actions. The goal is not to make prompts "unhackable". The goal is to make compromise survivable by enforcing deterministic controls around a probabilistic model.

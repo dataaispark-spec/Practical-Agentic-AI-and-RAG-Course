@@ -1,6 +1,7 @@
 # Module 2 — Python for AI Engineering
 
 
+
 ## Module purpose
 
 This module turns Python knowledge into **production AI engineering capability**. The goal is not to learn Python syntax in isolation; it is to build reliable asynchronous model clients, typed contracts, retries, timeouts, streaming, concurrency controls, configuration, testing seams, and measurable failure handling.
