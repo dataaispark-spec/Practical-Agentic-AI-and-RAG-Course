@@ -35,19 +35,18 @@ jobs:
           python-version: '3.11'
       - name: Install runtime QA dependencies
         run: python -m pip install -r requirements-dev.txt
-      - name: Resolve module directory
-        id: resolve
-        shell: bash
-        run: |
-          if [ "${{ matrix.module }}" = "06" ]; then
-            echo "dir=06-rag-from-first-principles" >> "$GITHUB_OUTPUT"
-          else
-            echo "dir=$(find . -maxdepth 1 -type d -name '${{ matrix.module }}-*' -print -quit | sed 's#^./##')" >> "$GITHUB_OUTPUT"
-          fi
       - name: Run module tests
         shell: bash
         run: |
-          DIR="${{ steps.resolve.outputs.dir }}"
+          set -euo pipefail
+          if [ "${{ matrix.module }}" = "06" ]; then
+            DIR="06-rag-from-first-principles"
+          else
+            DIR="$(find . -maxdepth 1 -type d -name '${{ matrix.module }}-*' -print -quit | sed 's#^./##')"
+          fi
+          test -n "$DIR"
+          test -d "$DIR/tests"
+          echo "Testing $DIR"
           PYTHONPATH="$DIR:$DIR/app:${PYTHONPATH:-}" pytest -q "$DIR/tests"
 
   notebook-runtime:
