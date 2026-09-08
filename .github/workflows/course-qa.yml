@@ -49,7 +49,7 @@ jobs:
               06) DIR="06-rag-from-first-principles";;
               31) DIR="31-knowledge-engineering-graph-rag";;
               32) DIR="32-graph-engineering-temporal-knowledge";;
-              33) DIR="agentic-knowledge-graph-construction";;
+              33) DIR="33-agentic-knowledge-graph-construction";;
               34) DIR="34-graph-vector-hybrid-retrieval";;
               35) DIR="35-compounding-knowledge-llm-wiki";;
               36) DIR="36-loop-engineering";;
