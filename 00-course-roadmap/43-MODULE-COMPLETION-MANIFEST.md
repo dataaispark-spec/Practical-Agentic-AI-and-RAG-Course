@@ -1,6 +1,9 @@
-# 43-Module Completion Branch
+# 43-Module Completion Manifest
 
-This branch is the canonical 43-module learning branch. The numbered directories `01`–`43` are the authoritative curriculum paths. Legacy frontier directories from the former 31–38 numbering are retained only as compatibility copies and must not receive new learning content.
+Refresh checkpoint: **2026-09-09**
+Branch: **main**
+
+This file is the visible contract for the canonical 43-module course. It records the authoritative curriculum numbering, the current implementation mapping, and the QA certification rule.
 
 ## Canonical sequence
 
@@ -53,27 +56,48 @@ This branch is the canonical 43-module learning branch. The numbered directories
 42. Computer Use & Always-On AI Teammates
 43. Frontier Graph-RAG Agentic Capstone
 
+## Current implementation mapping
+
+Modules 01–30 use their numbered course directories, with `06-rag-from-first-principles/` authoritative over the deprecated `06-rag-first-principles/` duplicate.
+
+Modules 31–35 are physically present at:
+
+- `31-knowledge-engineering-graph-rag/`
+- `32-graph-engineering-temporal-knowledge/`
+- `33-agentic-knowledge-graph-construction/`
+- `34-graph-vector-hybrid-retrieval/`
+- `35-compounding-knowledge-llm-wiki/`
+
+Modules 36–43 currently resolve through explicit compatibility mappings to the mature former frontier implementation directories:
+
+- 36 → `31-loop-engineering/`
+- 37 → `32-harness-engineering/`
+- 38 → `33-long-running-autonomous-agents/`
+- 39 → `34-skills-memory-continual-harnesses/`
+- 40 → `35-environments-verifiers-agentic-rl/`
+- 41 → `36-recursive-self-improving-agents/`
+- 42 → `37-computer-use-always-on-ai-teammates/`
+- 43 → `38-frontier-agentic-rag-capstone/`
+
+This is intentional and non-destructive: existing tested frontier work is preserved while the canonical numbering is validated centrally by the roadmap and CI. Physical migration of 36–43 can be performed later as a separate rename/copy operation after all references are audited.
+
 ## Completion contract
 
-Every canonical module must provide learning material and executable engineering evidence appropriate to its subject:
+Every canonical module must provide, directly or through its compatibility mapping, the appropriate engineering evidence:
 
 `Learning objectives → README theory → app/lab → executable notebook → exercises → tests → failure/debugging → metrics/evaluation → security → mastery gate`
 
-A notebook's existence is not evidence of pedagogical completeness; the content must demonstrate the module objectives through executable practice where applicable.
+## QA certification contract
 
-## QA contract
+The repository is **not QA-certified** until the current GitHub Actions workflow passes:
 
-The branch is not considered QA-certified until:
+1. structural 43-module QA;
+2. all module tests in the 04–43 matrix;
+3. all clean-kernel notebook-runtime jobs in the 04–43 matrix;
+4. final aggregate gate.
 
-1. structural 43-module QA passes;
-2. module tests pass;
-3. clean-kernel notebook runtime tests pass;
-4. objective-to-artifact alignment QA passes;
-5. canonical module identity checks pass;
-6. the final aggregate CI gate passes.
+A queued or running workflow is not considered a pass.
 
-## Duplicate-path policy
+## Refresh action
 
-`06-rag-first-principles/` is a deprecated duplicate; `06-rag-from-first-principles/` is authoritative.
-
-Former frontier directories `31-loop-engineering/` through `38-frontier-agentic-rag-capstone/` are compatibility copies only. New work belongs in canonical `36-loop-engineering/` through `43-frontier-graph-rag-agentic-capstone/`.
+The `main` branch was refreshed on **2026-09-09**. The refresh updates the visible canonical contract and intentionally triggers a new Course QA workflow so the GitHub repository, not just local planning notes, becomes the source of truth for the current state.
