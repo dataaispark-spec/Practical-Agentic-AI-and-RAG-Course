@@ -1,52 +1,81 @@
 # Canonical 43-Module Course Map
 
-The course is organized as a 43-module progression. Modules 1–30 retain the IITM-aligned foundation and enterprise Agentic RAG capstone. Modules 31–35 form a dedicated Knowledge Engineering and GraphRAG track; Modules 36–43 build increasingly autonomous agent runtimes and culminate in the frontier Graph-RAG capstone.
+**Authoritative branch:** `main`  
+**Last audited:** 2026-09-09
 
-## Canonical sequence
+The numbered directory below is the source of truth for each module. Historical directories retained for compatibility are explicitly non-canonical.
 
-30. Enterprise Agentic RAG Capstone
-31. Knowledge Engineering & Graph RAG
-32. Graph Engineering & Temporal Knowledge
-33. Agentic Knowledge Graph Construction
-34. Graph + Vector Hybrid Retrieval
-35. Karpathy-style Compounding Knowledge / LLM Wiki
-36. Loop Engineering
-37. Harness Engineering
-38. Long-Running Autonomous Agents
-39. Skills, Memory & Continual Harnesses
-40. Environments, Verifiers & Agentic RL
-41. Recursive Self-Improving Agents
-42. Computer Use & Always-On Teammates
-43. Frontier Graph-RAG Agentic Capstone
-
-## Physical canonical layout
-
-On the `course-43-modules-complete` branch, every canonical module has its own numbered directory. Modules 36–43 are physical mirrors of the mature former 31–38 implementations, preserving the engineering assets while making the GitHub tree match the curriculum numbering.
-
-| Canonical | Subject | Physical directory |
+| # | Canonical directory | Primary focus |
 |---:|---|---|
-| 31 | Knowledge Engineering & Graph RAG | `31-knowledge-engineering-graph-rag/` |
-| 32 | Graph Engineering & Temporal Knowledge | `32-graph-engineering-temporal-knowledge/` |
-| 33 | Agentic Knowledge Graph Construction | `33-agentic-knowledge-graph-construction/` |
-| 34 | Graph + Vector Hybrid Retrieval | `34-graph-vector-hybrid-retrieval/` |
-| 35 | Karpathy-style Compounding Knowledge / LLM Wiki | `35-compounding-knowledge-llm-wiki/` |
-| 36 | Loop Engineering | `36-loop-engineering/` |
-| 37 | Harness Engineering | `37-harness-engineering/` |
-| 38 | Long-Running Autonomous Agents | `38-long-running-autonomous-agents/` |
-| 39 | Skills, Memory & Continual Harnesses | `39-skills-memory-continual-harnesses/` |
-| 40 | Environments, Verifiers & Agentic RL | `40-environments-verifiers-agentic-rl/` |
-| 41 | Recursive Self-Improving Agents | `41-recursive-self-improving-agents/` |
-| 42 | Computer Use & Always-On Teammates | `42-computer-use-always-on-ai-teammates/` |
-| 43 | Frontier Graph-RAG Agentic Capstone | `43-frontier-graph-rag-agentic-capstone/` |
+| 01 | `01-ai-systems-thinking` | AI systems thinking & architecture decisions |
+| 02 | `02-python-ai-engineering` | Python AI engineering / async reliability |
+| 03 | `03-fastapi-testing` | FastAPI contracts, streaming, testing |
+| 04 | `04-llm-application-foundations` | LLM application foundations |
+| 05 | `05-prompting-evaluation` | prompting + evaluation |
+| 06 | `06-rag-from-first-principles` | first-principles RAG |
+| 07 | `07-embeddings-vector-db` | embeddings + vector databases |
+| 08 | `08-document-intelligence-pii` | document intelligence + PII |
+| 09 | `09-advanced-retrieval` | hybrid retrieval + reranking |
+| 10 | `10-rag-optimization` | optimization, caching, versioning |
+| 11 | `11-rag-evaluation` | RAG evaluation + regression |
+| 12 | `12-rag-debugging` | RAG debugging + causal investigation |
+| 13 | `13-tool-calling-api-agents` | tool calling + API agents |
+| 14 | `14-raw-agent-loop` | bounded agent loop |
+| 15 | `15-memory` | memory engineering |
+| 16 | `16-langgraph-stateful-workflows` | stateful workflows |
+| 17 | `17-planning-human-in-the-loop` | planning + human approval |
+| 18 | `18-agent-security` | agent security |
+| 19 | `19-multi-agent-reality-check` | single vs multi-agent decision science |
+| 20 | `20-multi-agent-architectures` | supervisor/worker + multi-agent architectures |
+| 21 | `21-coordination-fault-tolerance` | distributed coordination + fault tolerance |
+| 22 | `22-multi-agent-debugging` | multi-agent debugging |
+| 23 | `23-mcp-fundamentals` | MCP client fundamentals |
+| 24 | `24-mcp-server-enterprise` | enterprise MCP server |
+| 25 | `25-observability` | AI observability |
+| 26 | `26-production-evaluation` | production evaluation + A/B/regression |
+| 27 | `27-cost-engineering` | cost-aware routing |
+| 28 | `28-responsible-ai-governance` | responsible AI + governance |
+| 29 | `29-deployment-cicd` | deployment + CI/CD |
+| 30 | `30-enterprise-agentic-rag-capstone` | first integrated enterprise capstone |
+| 31 | `31-knowledge-engineering-graph-rag` | knowledge engineering + GraphRAG |
+| 32 | `32-graph-engineering-temporal-knowledge` | graph engineering + temporal knowledge |
+| 33 | `33-agentic-knowledge-graph-construction` | agentic KG construction |
+| 34 | `34-graph-vector-hybrid-retrieval` | graph + vector hybrid retrieval |
+| 35 | `35-compounding-knowledge-llm-wiki` | compounding knowledge / LLM wiki |
+| 36 | `36-loop-engineering` | production agent loop engineering |
+| 37 | `37-harness-engineering` | agent harness engineering |
+| 38 | `38-long-running-autonomous-agents` | durable long-running autonomy |
+| 39 | `39-skills-memory-continual-harnesses` | skills, memory + continual harnesses |
+| 40 | `40-environments-verifiers-agentic-rl` | environments, verifiers + agentic RL |
+| 41 | `41-recursive-self-improving-agents` | recursive/self-improving agents |
+| 42 | `42-computer-use-always-on-ai-teammates` | computer use + always-on teammates |
+| 43 | `43-frontier-graph-rag-agentic-capstone` | frontier Graph-RAG agentic capstone |
 
-## Graph engineering definition of done
+## Compatibility aliases
 
-Modules 31–35 collectively teach ontology/schema design; entities, relations and claims; entity resolution; provenance and citations; temporal validity and supersession; bounded traversal; graph/vector/reranker hybrid retrieval; agentic graph construction and validation; contradiction and poisoning detection; tenant/ACL isolation; graph health metrics; maintained wiki artifacts; and benchmark evidence for when graph structure helps and when it does not.
+The former frontier directories `31-loop-engineering` through `38-frontier-agentic-rag-capstone` are retained only as historical compatibility copies. They must not be treated as authoritative implementations for canonical numbering.
 
-## Architectural principle
+The former `06-rag-first-principles` and `30-capstone` paths are also legacy aliases. Canonical references, CI, notebooks and learner links must use the directories in the table above.
 
-`Knowledge Graph = what the system knows.`
+## Canonical artifact contract
 
-`Agent/Task Graph = how the system works.`
+Every canonical module must expose:
 
-The final AegisAI architecture uses both without allowing either graph to become an unchecked authority. Policy, authorization, budgets, verification, evaluation and audit remain mandatory control boundaries.
+- `README.md` with module identity, mission/theory, learning outcomes or mastery gate, architecture/trade-offs, labs/exercises and security/failure guidance;
+- `notebooks/` with at least one executable Colab notebook whose title/metadata uses the canonical module number;
+- `app/` as the implementation boundary (direct code or an explicit lab-boundary adapter/documentation when the executable reference lives under `labs/`);
+- `tests/` with meaningful assertions and failure-path coverage;
+- measurable outcomes and a mastery gate;
+- explicit dependency linkage to adjacent modules and AegisAI.
+
+## Notebook learning contract
+
+Every canonical notebook should demonstrate:
+
+`Predict → Build → Try → Break → Debug → Measure → Improve → Defend`
+
+Equivalent section names are acceptable, but the behavior must be present rather than merely asserted.
+
+## Certification
+
+Canonical structure, module tests and notebook runtime must all pass before the course is considered QA-certified. Manual semantic review remains required for major curriculum changes.
