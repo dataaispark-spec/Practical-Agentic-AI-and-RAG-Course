@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   structural-qa:
     runs-on: ubuntu-latest
@@ -14,3 +17,65 @@ jobs:
           python-version: '3.11'
       - name: Run 38-module structural QA
         run: python 00-course-roadmap/course_qa_checker.py
+
+  module-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38]
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      MOCK_LLM: 'true'
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install runtime QA dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Resolve module directory
+        id: resolve
+        shell: bash
+        run: |
+          if [ "${{ matrix.module }}" = "06" ]; then
+            echo "dir=06-rag-from-first-principles" >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=$(find . -maxdepth 1 -type d -name '${{ matrix.module }}-*' -print -quit | sed 's#^./##')" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Run module tests
+        run: pytest -q "${{ steps.resolve.outputs.dir }}/tests"
+
+  notebook-runtime:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38]
+    env:
+      MOCK_LLM: 'true'
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install notebook QA dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Execute module notebook(s)
+        run: python 00-course-roadmap/run_notebook_qa.py --modules "${{ matrix.module }}-${{ matrix.module }}" --timeout 300 --continue-on-error
+
+  final-qa-gate:
+    if: always()
+    needs: [structural-qa, module-tests, notebook-runtime]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all QA jobs to pass
+        run: |
+          test "${{ needs.structural-qa.result }}" = "success"
+          test "${{ needs.module-tests.result }}" = "success"
+          test "${{ needs.notebook-runtime.result }}" = "success"
+          echo "38-module QA gate passed."
