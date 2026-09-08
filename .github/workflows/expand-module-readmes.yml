@@ -1,0 +1,41 @@
+name: Expand 43 Module READMEs
+
+on:
+  push:
+    branches: [course-43-modules-complete]
+
+permissions:
+  contents: write
+
+jobs:
+  expand:
+    if: ${{ !contains(github.event.head_commit.message, 'Expand all 43 module READMEs') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: course-43-modules-complete
+          fetch-depth: 0
+      - name: Generate long-form module READMEs
+        run: python .github/scripts/expand_module_readmes.py
+      - name: Validate README lengths and identities
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          dirs={1:'01-ai-systems-thinking',2:'02-python-ai-engineering',3:'03-fastapi-testing',4:'04-llm-application-foundations',5:'05-prompting-evaluation',6:'06-rag-from-first-principles',7:'07-embeddings-vector-db',8:'08-document-intelligence-pii',9:'09-advanced-retrieval',10:'10-rag-optimization',11:'11-rag-evaluation',12:'12-rag-debugging',13:'13-tool-calling-api-agents',14:'14-raw-agent-loop',15:'15-memory',16:'16-langgraph-stateful-workflows',17:'17-planning-human-in-the-loop',18:'18-agent-security',19:'19-multi-agent-reality-check',20:'20-multi-agent-architectures',21:'21-coordination-fault-tolerance',22:'22-multi-agent-debugging',23:'23-mcp-fundamentals',24:'24-mcp-server-enterprise',25:'25-observability',26:'26-production-evaluation',27:'27-cost-engineering',28:'28-responsible-ai-governance',29:'29-deployment-ci-cd',30:'30-enterprise-agentic-rag-capstone',31:'31-knowledge-engineering-graph-rag',32:'32-graph-engineering-temporal-knowledge',33:'33-agentic-knowledge-graph-construction',34:'34-graph-vector-hybrid-retrieval',35:'35-compounding-knowledge-llm-wiki',36:'36-loop-engineering',37:'37-harness-engineering',38:'38-long-running-autonomous-agents',39:'39-skills-memory-continual-harnesses',40:'40-environments-verifiers-agentic-rl',41:'41-recursive-self-improving-agents',42:'42-computer-use-always-on-ai-teammates',43:'43-frontier-graph-rag-agentic-capstone'}
+          for n,d in dirs.items():
+              p=Path(d)/'README.md'; text=p.read_text(encoding='utf-8'); words=len(text.split())
+              assert words>=20000, (n,words)
+              assert re.search(rf'^# Module {n} — ',text,re.M), n
+              assert '## Expanded long-form course chapter' in text, n
+              print(f'M{n}: {words} words')
+          PY
+      - name: Commit expanded documentation
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add '0[1-9]-*/README.md' '1[0-9]-*/README.md' '2[0-9]-*/README.md' '3[0-9]-*/README.md' '4[0-3]-*/README.md'
+          git commit -m 'docs: Expand all 43 module READMEs to 20k+ words' || exit 0
+          git push origin course-43-modules-complete
