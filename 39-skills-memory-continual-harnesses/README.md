@@ -1,57 +1,49 @@
 # Module 39 — Skills, Memory & Continual Harnesses
 
 ## Why this matters
-A long-running agent becomes useful only when it can preserve validated knowledge and reusable procedures without turning stale or poisoned state into authority.
+A long-running agent becomes useful when it can preserve validated knowledge and reusable procedures without turning stale or poisoned state into authority.
 
-## Theory and mental model
+## Learning outcomes
 
-**Experience → candidate skill → validation/evaluation gate → trusted skill → persistent memory → later retrieval → measured reuse**
+By completing this module you can:
 
-A skill is a reusable procedure. Memory stores evidence and context. A continual harness decides what may be learned, promoted, rolled back, or forgotten.
+1. Distinguish working memory, episodic memory, semantic memory and procedural skills.
+2. Design provenance, confidence, sensitivity, tenant scope, version and expiry for persistent state.
+3. Convert experience into candidate skills through explicit evidence and evaluation.
+4. Gate promotion from candidate to trusted behavior.
+5. Detect contradictions, stale state and tenant-crossing memory.
+6. Implement skill versioning, rollback and deprecation.
+7. Measure reuse success, regression and stale-memory rates.
+8. Explain why continual learning must remain reversible and policy-bounded.
 
-## Architecture / data flow
+## Core lifecycle
 
 ```text
-Task
-  ↓
-Agent loop → memory retrieval → candidate procedure
-  ↓                         ↑
-Tool execution → outcome/evidence
-  ↓
-Candidate skill → verifier/evaluation gate
-  ↓
-Trusted skill registry → persistent store
-  ↓
-Future tasks + regression evaluation
+Experience → Candidate Skill/Memory → Validate/Evaluate → Trusted State
+→ Retrieve → Use → Observe → Improve / Rollback / Forget
 ```
 
-## Industry scenario
-An enterprise support agent repeatedly diagnoses the same production incident. It may propose a troubleshooting skill, but promotion requires evidence, security checks, regression tests, provenance, versioning and rollback.
+## Hands-on labs
 
-## Build
-Implement a skill registry with explicit states such as `candidate`, `trusted`, `rejected`, and `deprecated`. Attach provenance, confidence, evaluation evidence and version identifiers.
+1. Build a versioned skill registry.
+2. Add memory provenance and tenant scope.
+3. Require evidence before promotion.
+4. Add contradiction detection.
+5. Add expiry and forgetting.
+6. Add tenant-aware retrieval.
+7. Simulate malicious learned procedures.
+8. Compare static and continually learned skills on a fixed regression set.
+9. Implement rollback after a harmful skill regression.
+10. Measure promotion precision, reuse success, stale rate and security incidents.
 
-## Break / debug
-Inject a low-confidence skill, contradictory memory, stale procedure, malicious instruction and tenant-crossing memory. Verify that untrusted knowledge cannot silently become executable policy.
+## Failure-first
 
-## Measure
-Track skill promotion precision, regression rate, reuse success, stale-skill rate, rollback frequency, memory retrieval hit rate, latency, token cost and security violations.
+Low-confidence skill promotion, poisoned memory, stale procedure, benchmark overfit, silent overwrite, privilege drift and tenant leakage.
 
 ## Security
-Persistence expands the attack surface: memory poisoning, skill injection, privilege drift, cross-tenant retrieval and unsafe learned procedures must be blocked by policy and verification gates.
 
-## Exercises
-1. Add skill versioning and rollback.
-2. Require provenance for promotion.
-3. Add contradiction detection between skills.
-4. Add tenant-aware retrieval.
-5. Compare static skills against continually learned skills using a fixed regression set.
-
-## Interview / system design
-- When should an agent learn a skill versus keep the behavior ephemeral?
-- How do you prevent memory from becoming an untrusted policy store?
-- Design rollback for a skill that caused a production regression.
-- What evidence is sufficient to promote a candidate skill?
+Persistent memory and skills are data stores, not authorization stores. Learned behavior must never grant itself permissions or bypass policy.
 
 ## Mastery gate
-You can explain, implement, break, measure and defend a continual harness while keeping learned state reversible, attributable and policy-bounded.
+
+Demonstrate candidate→trusted promotion with evidence, reject unsafe learning, roll back a regression, enforce tenant scope and explain the governance boundary around continual learning.

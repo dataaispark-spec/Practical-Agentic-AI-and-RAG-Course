@@ -1,0 +1,52 @@
+"""Canonical objective map used by course QA.
+
+This is intentionally explicit: keyword detection alone cannot prove that a
+module's notebook, exercise, app and tests actually support its stated goals.
+The map provides the minimum concepts that must be visible in the module's
+learning artifacts and is checked in as review metadata.
+"""
+OBJECTIVES = {
+1: ("AI systems thinking", "architecture decisions", "requirements", "trade-offs", "failure modes"),
+2: ("Python AI engineering", "async", "concurrency", "retry", "timeouts", "testing"),
+3: ("FastAPI", "typed API", "streaming", "testing", "cancellation", "errors"),
+4: ("LLM application foundations", "model routing", "capabilities", "fallback", "cost", "latency"),
+5: ("prompting", "evaluation", "task contract", "regression", "judge calibration"),
+6: ("RAG", "chunking", "embeddings", "similarity search", "groundedness", "citations"),
+7: ("embeddings", "vector database", "ANN", "Recall@K", "metadata filtering", "versioning"),
+8: ("document intelligence", "PII", "provenance", "structure recovery", "quarantine"),
+9: ("advanced retrieval", "hybrid retrieval", "BM25", "RRF", "reranking", "diagnostics"),
+10: ("RAG optimization", "cache", "invalidation", "versioning", "context budget", "rollback"),
+11: ("RAG evaluation", "golden dataset", "retrieval metrics", "groundedness", "regression gate"),
+12: ("RAG debugging", "trace", "first failure", "root cause", "replay", "regression test"),
+13: ("tool calling", "tool schemas", "authorization", "idempotency", "approval", "audit"),
+14: ("raw agent loop", "state", "termination", "budgets", "verification", "recovery"),
+15: ("memory", "memory types", "provenance", "contradiction", "supersession", "forgetting"),
+16: ("stateful workflows", "graph orchestration", "checkpoints", "interrupts", "reducers", "replay"),
+17: ("planning", "planner executor", "preconditions", "postconditions", "human approval", "replanning"),
+18: ("agent security", "threat model", "authorization", "tenant isolation", "egress", "prompt injection"),
+19: ("multi-agent decision", "single-agent baseline", "coordination overhead", "cost", "latency", "architecture decision"),
+20: ("multi-agent architecture", "supervisor", "worker", "fan-out", "partial failure", "delegation"),
+21: ("distributed coordination", "message contract", "lease", "heartbeat", "backpressure", "dead letter"),
+22: ("multi-agent debugging", "trace", "causality", "replay", "incident", "regression"),
+23: ("MCP client", "host", "client", "server", "discovery", "capability validation"),
+24: ("MCP server", "capability catalog", "typed handlers", "tenant boundary", "idempotency", "audit"),
+25: ("observability", "traces", "spans", "metrics", "cost attribution", "alerts"),
+26: ("production evaluation", "A/B", "shadow", "confidence intervals", "slice analysis", "release gate"),
+27: ("cost engineering", "cost ledger", "budget", "routing", "cost per success", "quality constraint"),
+28: ("governance", "risk classification", "data classification", "policy", "human oversight", "audit"),
+29: ("deployment", "CI/CD", "release manifest", "canary", "rollback", "AI versioning"),
+30: ("enterprise Agentic RAG capstone", "integration", "governed RAG", "tools", "memory", "verification", "deployment"),
+31: ("knowledge engineering", "ontology", "entities", "relations", "provenance", "GraphRAG", "multi-hop"),
+32: ("graph engineering", "ontology evolution", "entity resolution", "temporal validity", "supersession", "graph health"),
+33: ("agentic knowledge graph", "extraction", "proposal", "validation", "approval", "rollback", "poisoning"),
+34: ("graph vector hybrid retrieval", "vector-only", "graph-only", "hybrid", "RRF", "reranking", "multi-hop"),
+35: ("compounding knowledge", "LLM wiki", "curation", "citation", "contradiction", "freshness", "rollback"),
+36: ("loop engineering", "state transition", "termination", "budgets", "verification", "recovery", "telemetry"),
+37: ("harness engineering", "context management", "tools", "state", "policy", "checkpoint", "replay"),
+38: ("long-running autonomous agents", "durable state", "lease", "heartbeat", "checkpoint", "resume", "idempotency"),
+39: ("skills memory continual harnesses", "candidate skill", "promotion gate", "versioning", "rollback", "memory", "forgetting"),
+40: ("environments verifiers agentic RL", "environment", "trajectory", "verifier", "reward", "reward hacking", "held-out evaluation"),
+41: ("recursive self-improving agents", "improvement hypothesis", "candidate artifact", "experiment", "promotion", "rollback", "evaluator gaming"),
+42: ("computer use", "environment grounding", "screenshots", "DOM", "approval", "stale state", "always-on"),
+43: ("frontier Graph-RAG capstone", "knowledge graph", "hybrid retrieval", "harness", "durable autonomy", "computer use", "verification", "self-improvement"),
+}

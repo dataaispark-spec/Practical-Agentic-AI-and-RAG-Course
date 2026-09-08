@@ -1,39 +1,52 @@
-# Module 33 — Long-Running & Autonomous Agents
+# Module 38 — Long-Running Autonomous Agents
 
 ## Mission
+Move from request/response agents to durable workers that can operate for long periods while remaining bounded, observable, recoverable and governable.
 
-Move from request/response agents to durable workers that can operate for hours or days while remaining bounded, observable, recoverable and governable.
+## Learning outcomes
+
+By completing this module you can:
+
+1. Distinguish goals, tasks, runs, attempts and checkpoints.
+2. Design durable state that survives process restart.
+3. Implement worker leases, heartbeats and stale-worker detection.
+4. Enforce multidimensional budgets over long-running work.
+5. Implement safe checkpoint, pause, cancel and resume semantics.
+6. Make external side effects idempotent or compensate for them.
+7. Persist human approvals and revalidate policy before resuming.
+8. Handle event-driven waiting and scheduled wake-ups.
+9. Recover from crashes, provider failures and changed external state.
+10. Reconstruct execution history for audit and debugging.
+11. Measure recovery rate, duplicate effects, SLA adherence and cost/run.
+12. Defend long-running autonomy decisions in system design.
 
 ## Core abstraction
 
 ```text
-Long-running Agent
-= Goal + Durable State + Loop + Environment + Tools
-  + Policy + Budgets + Verification + Recovery
+Goal → durable state → loop → environment/tools
+     → verification → checkpoint/recovery → completion
 ```
 
-A large context window is not durable execution. Persistence requires an authoritative state model outside model context.
+## Hands-on lab — Durable Autonomous Worker
 
-## Learning outcomes
+Build a worker with a durable queue/state store, leases, heartbeats, checkpoints, waiting states, approval persistence, policy revalidation, idempotency keys, replayable events and bounded retry/recovery.
 
-Build and defend workers supporting durable goals/tasks/runs, leases and heartbeats, deadlines, multidimensional budgets, checkpoints, resumability, bounded retries, idempotent side effects, pause/resume/cancel, human escalation, scheduling, artifacts, crash recovery, stale-state detection, policy re-validation and audit reconstruction.
+### Failure-first cases
 
-## Hands-on track
+Duplicate execution, split brain, lost progress, goal drift, infinite autonomy, stale policy, stale knowledge, zombie workers, provider outage and uncertain external side effects.
 
-Study five identities: GOAL, TASK, RUN, ATTEMPT, CHECKPOINT. Implement a durable lifecycle, worker leases, heartbeat/progress monitoring, idempotency, checkpointing, context compaction, event-driven waiting, approval persistence, change-of-mind semantics, goal-drift detection, multidimensional budgets, recovery matrices and scheduled autonomy.
+### Metrics
 
-### Failure-first labs
+Completion rate, recovery success, recovery time, duplicate-effect rate, checkpoint overhead, cost/run, escalation rate and SLA adherence.
 
-Break and recover from duplicate execution, split brain, lost progress, goal drift, infinite autonomy, stale policy, stale knowledge, zombie workers and uncertain external side effects.
+## Frontier case studies
 
-### Frontier case studies
+Use Hermes Agent, Prime Agent and always-on agent patterns as architectural case studies. For each capability identify the persistence/control primitive that enables it and the new failure mode introduced.
 
-Analyze Hermes Agent, Prime Agent and Grok Bot as architectural case studies. For each capability ask: **what persistence/control primitive makes it possible, and what new failure mode does it introduce?**
+## Security
 
-### Production project
+Persistence does not create authority. Revalidate identity, tenant, policy, approval and external state after pause/resume or restart.
 
-Build a Durable Autonomous Worker with a durable queue/state store, leases, checkpoints, policy, budgets, approvals, verification, audit and replay/debugging. Measure completion, recovery, duplicate side effects, recovery time, cost, checkpoint overhead and escalation rate.
+## Mastery gate
 
-### Mastery gate
-
-Demonstrate safe stop/restart/wait/resume behavior, bounded autonomy, no duplicate side effects, policy revalidation and reconstructable execution history.
+Prove safe stop/restart/wait/resume behavior, no duplicate side effects in the tested workflow, stale-state detection, policy revalidation and reconstructable execution history.
