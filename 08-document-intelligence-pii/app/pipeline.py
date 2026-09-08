@@ -73,16 +73,23 @@ def parse(raw: RawDocument) -> tuple[DocumentElement, ...]:
 
 def detect_pii(text: str) -> tuple[Finding, ...]:
     findings: list[Finding] = []
-    for kind, pattern, confidence in (
-        ("email", EMAIL, 0.99),
-        ("phone", PHONE, 0.85),
-        ("card_like", CARD, 0.70),
-    ):
+    # Detect card-like sequences first.  A 13–19 digit payment-card-shaped value
+    # can also satisfy the broad phone regex; payment data must win that overlap.
+    card_spans: list[tuple[int, int]] = []
+    for match in CARD.finditer(text):
+        value = match.group()
+        digits = re.sub(r"\D", "", value)
+        if 13 <= len(digits) <= 19:
+            card_spans.append((match.start(), match.end()))
+            findings.append(Finding("card_like", match.start(), match.end(), value, 0.70))
+    for kind, pattern, confidence in (("email", EMAIL, 0.99), ("phone", PHONE, 0.85)):
         for match in pattern.finditer(text):
+            if kind == "phone" and any(match.start() < end and start < match.end() for start, end in card_spans):
+                continue
             findings.append(Finding(kind, match.start(), match.end(), match.group(), confidence))
-    # Remove overlapping lower-priority matches deterministically.
     selected: list[Finding] = []
-    for finding in sorted(findings, key=lambda f: (f.start, -(f.end - f.start), -f.confidence)):
+    priority = {"card_like": 0, "email": 1, "phone": 2}
+    for finding in sorted(findings, key=lambda f: (f.start, -(f.end - f.start), priority[f.kind])):
         if any(finding.start < existing.end and existing.start < finding.end for existing in selected):
             continue
         selected.append(finding)
@@ -101,44 +108,21 @@ def protect(raw: RawDocument, allowed_kinds: set[str] | None = None) -> Protecte
     allowed = allowed_kinds or set()
     prohibited = tuple(f for f in findings if f.kind not in allowed)
     protected_text = redact(raw.text, prohibited)
-    # Low-confidence prohibited findings require human review rather than silent indexing.
     quarantined = any(f.confidence < 0.75 for f in prohibited)
     reason = "low-confidence sensitive finding requires review" if quarantined else None
     source_hash = hashlib.sha256(raw.text.encode("utf-8")).hexdigest()
     protected_hash = hashlib.sha256(protected_text.encode("utf-8")).hexdigest()
-    return ProtectedDocument(
-        raw.document_id,
-        raw.tenant_id,
-        raw.source_uri,
-        protected_text,
-        findings,
-        protected_hash,
-        source_hash,
-        raw.source_version,
-        raw.pipeline_version,
-        quarantined,
-        reason,
-        raw.sensitivity,
-        raw.acl,
-    )
+    return ProtectedDocument(raw.document_id, raw.tenant_id, raw.source_uri, protected_text, findings, protected_hash, source_hash, raw.source_version, raw.pipeline_version, quarantined, reason, raw.sensitivity, raw.acl)
 
 
 def validate(document: ProtectedDocument) -> list[str]:
     errors: list[str] = []
-    if not document.document_id:
-        errors.append("missing document_id")
-    if not document.tenant_id:
-        errors.append("missing tenant_id")
-    if not document.source_uri:
-        errors.append("missing source_uri")
-    if not document.acl:
-        errors.append("missing ACL")
-    if not document.source_version:
-        errors.append("missing source_version")
-    if not document.pipeline_version:
-        errors.append("missing pipeline_version")
-    if document.quarantined:
-        errors.append(document.reason or "quarantined")
-    if not document.content_hash or not document.source_content_hash:
-        errors.append("missing content_hash")
+    if not document.document_id: errors.append("missing document_id")
+    if not document.tenant_id: errors.append("missing tenant_id")
+    if not document.source_uri: errors.append("missing source_uri")
+    if not document.acl: errors.append("missing ACL")
+    if not document.source_version: errors.append("missing source_version")
+    if not document.pipeline_version: errors.append("missing pipeline_version")
+    if document.quarantined: errors.append(document.reason or "quarantined")
+    if not document.content_hash or not document.source_content_hash: errors.append("missing content_hash")
     return errors
