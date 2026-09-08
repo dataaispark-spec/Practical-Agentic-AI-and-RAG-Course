@@ -1,6 +1,6 @@
 # Canonical 43-Module Course Map
 
-The course is now organized as a 43-module progression. Modules 1–30 retain the IITM-aligned foundation and enterprise Agentic RAG capstone. Modules 31–35 form a dedicated Knowledge Engineering and GraphRAG track; Modules 36–42 build increasingly autonomous agent runtimes; Module 43 integrates the complete stack.
+The course is organized as a 43-module progression. Modules 1–30 retain the IITM-aligned foundation and enterprise Agentic RAG capstone. Modules 31–35 form a dedicated Knowledge Engineering and GraphRAG track; Modules 36–43 build increasingly autonomous agent runtimes and culminate in the frontier Graph-RAG capstone.
 
 ## Canonical sequence
 
@@ -19,45 +19,29 @@ The course is now organized as a 43-module progression. Modules 1–30 retain th
 42. Computer Use & Always-On Teammates
 43. Frontier Graph-RAG Agentic Capstone
 
-## Compatibility mapping
+## Physical canonical layout
 
-The repository already contains mature frontier implementations under the former 31–38 paths. They remain preserved as implementation assets while the canonical curriculum numbering moves forward. The QA system uses this explicit map rather than guessing from directory prefixes.
+On the `course-43-modules-complete` branch, every canonical module has its own numbered directory. Modules 36–43 are physical mirrors of the mature former 31–38 implementations, preserving the engineering assets while making the GitHub tree match the curriculum numbering.
 
-| Canonical | Canonical subject | Implementation asset |
+| Canonical | Subject | Physical directory |
 |---:|---|---|
 | 31 | Knowledge Engineering & Graph RAG | `31-knowledge-engineering-graph-rag/` |
 | 32 | Graph Engineering & Temporal Knowledge | `32-graph-engineering-temporal-knowledge/` |
 | 33 | Agentic Knowledge Graph Construction | `33-agentic-knowledge-graph-construction/` |
 | 34 | Graph + Vector Hybrid Retrieval | `34-graph-vector-hybrid-retrieval/` |
 | 35 | Karpathy-style Compounding Knowledge / LLM Wiki | `35-compounding-knowledge-llm-wiki/` |
-| 36 | Loop Engineering | `31-loop-engineering/` |
-| 37 | Harness Engineering | `32-harness-engineering/` |
-| 38 | Long-Running Autonomous Agents | `33-long-running-autonomous-agents/` |
-| 39 | Skills, Memory & Continual Harnesses | `34-skills-memory-continual-harnesses/` |
-| 40 | Environments, Verifiers & Agentic RL | `35-environments-verifiers-agentic-rl/` |
-| 41 | Recursive Self-Improving Agents | `36-recursive-self-improving-agents/` |
-| 42 | Computer Use & Always-On Teammates | `37-computer-use-always-on-ai-teammates/` |
-| 43 | Frontier Graph-RAG Agentic Capstone | `38-frontier-agentic-rag-capstone/` |
-
-This compatibility approach prevents loss of existing tested work. A later repository migration may physically rename these legacy implementation directories once all references and external links are updated.
+| 36 | Loop Engineering | `36-loop-engineering/` |
+| 37 | Harness Engineering | `37-harness-engineering/` |
+| 38 | Long-Running Autonomous Agents | `38-long-running-autonomous-agents/` |
+| 39 | Skills, Memory & Continual Harnesses | `39-skills-memory-continual-harnesses/` |
+| 40 | Environments, Verifiers & Agentic RL | `40-environments-verifiers-agentic-rl/` |
+| 41 | Recursive Self-Improving Agents | `41-recursive-self-improving-agents/` |
+| 42 | Computer Use & Always-On Teammates | `42-computer-use-always-on-ai-teammates/` |
+| 43 | Frontier Graph-RAG Agentic Capstone | `43-frontier-graph-rag-agentic-capstone/` |
 
 ## Graph engineering definition of done
 
-Modules 31–35 must collectively teach and demonstrate:
-
-- ontology/schema design;
-- entities, relations and claims;
-- entity resolution;
-- provenance and citations;
-- temporal validity and supersession;
-- bounded traversal;
-- graph/vector/reranker hybrid retrieval;
-- agentic graph construction and validation;
-- contradiction and poisoning detection;
-- tenant/ACL isolation;
-- graph health metrics;
-- compounding knowledge / maintained wiki artifacts;
-- benchmark evidence for when graph structure helps and when it does not.
+Modules 31–35 collectively teach ontology/schema design; entities, relations and claims; entity resolution; provenance and citations; temporal validity and supersession; bounded traversal; graph/vector/reranker hybrid retrieval; agentic graph construction and validation; contradiction and poisoning detection; tenant/ACL isolation; graph health metrics; maintained wiki artifacts; and benchmark evidence for when graph structure helps and when it does not.
 
 ## Architectural principle
 
