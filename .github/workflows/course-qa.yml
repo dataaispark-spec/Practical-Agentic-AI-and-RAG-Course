@@ -49,14 +49,14 @@ jobs:
             33) DIR="33-agentic-knowledge-graph-construction";;
             34) DIR="34-graph-vector-hybrid-retrieval";;
             35) DIR="35-compounding-knowledge-llm-wiki";;
-            36) DIR="31-loop-engineering";;
-            37) DIR="32-harness-engineering";;
-            38) DIR="33-long-running-autonomous-agents";;
-            39) DIR="34-skills-memory-continual-harnesses";;
-            40) DIR="35-environments-verifiers-agentic-rl";;
-            41) DIR="36-recursive-self-improving-agents";;
-            42) DIR="37-computer-use-always-on-ai-teammates";;
-            43) DIR="38-frontier-agentic-rag-capstone";;
+            36) DIR="36-loop-engineering";;
+            37) DIR="37-harness-engineering";;
+            38) DIR="38-long-running-autonomous-agents";;
+            39) DIR="39-skills-memory-continual-harnesses";;
+            40) DIR="40-environments-verifiers-agentic-rl";;
+            41) DIR="41-recursive-self-improving-agents";;
+            42) DIR="42-computer-use-always-on-ai-teammates";;
+            43) DIR="43-frontier-graph-rag-agentic-capstone";;
             *) DIR="$(find . -maxdepth 1 -type d -name "${{ matrix.module }}-*" -print -quit | sed 's#^./##')";;
           esac
           test -d "$DIR"
