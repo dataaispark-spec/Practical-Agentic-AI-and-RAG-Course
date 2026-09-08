@@ -16,7 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: ${{ env.PYTHON_VERSION }}}
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Run canonical 43-module structural QA
         run: python 00-course-roadmap/course_qa_checker.py --strict
 
@@ -26,26 +27,43 @@ jobs:
       fail-fast: false
       matrix:
         module: ['04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43']
-    env: {MOCK_LLM: 'true', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: ''}
+    env:
+      MOCK_LLM: 'true'
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: ${{ env.PYTHON_VERSION }}}
-      - run: python -m pip install -r requirements-dev.txt
-      - name: Resolve canonical implementation
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install runtime QA dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Resolve canonical implementation path
         shell: bash
         run: |
+          set -euo pipefail
           case "${{ matrix.module }}" in
-            06) DIR=06-rag-from-first-principles;;
-            31) DIR=31-knowledge-engineering-graph-rag;; 32) DIR=32-graph-engineering-temporal-knowledge;;
-            33) DIR=33-agentic-knowledge-graph-construction;; 34) DIR=34-graph-vector-hybrid-retrieval;; 35) DIR=35-compounding-knowledge-llm-wiki;;
-            36) DIR=31-loop-engineering;; 37) DIR=32-harness-engineering;; 38) DIR=33-long-running-autonomous-agents;;
-            39) DIR=34-skills-memory-continual-harnesses;; 40) DIR=35-environments-verifiers-agentic-rl;;
-            41) DIR=36-recursive-self-improving-agents;; 42) DIR=37-computer-use-always-on-ai-teammates;; 43) DIR=38-frontier-agentic-rag-capstone;;
-            *) DIR=$(find . -maxdepth 1 -type d -name "${{ matrix.module }}-*" -print -quit | sed 's#^./##');;
+            06) DIR="06-rag-from-first-principles";;
+            31) DIR="31-knowledge-engineering-graph-rag";;
+            32) DIR="32-graph-engineering-temporal-knowledge";;
+            33) DIR="33-agentic-knowledge-graph-construction";;
+            34) DIR="34-graph-vector-hybrid-retrieval";;
+            35) DIR="35-compounding-knowledge-llm-wiki";;
+            36) DIR="31-loop-engineering";;
+            37) DIR="32-harness-engineering";;
+            38) DIR="33-long-running-autonomous-agents";;
+            39) DIR="34-skills-memory-continual-harnesses";;
+            40) DIR="35-environments-verifiers-agentic-rl";;
+            41) DIR="36-recursive-self-improving-agents";;
+            42) DIR="37-computer-use-always-on-ai-teammates";;
+            43) DIR="38-frontier-agentic-rag-capstone";;
+            *) DIR="$(find . -maxdepth 1 -type d -name "${{ matrix.module }}-*" -print -quit | sed 's#^./##')";;
           esac
-          test -d "$DIR"; echo "DIR=$DIR" >> "$GITHUB_ENV"
-      - run: PYTHONPATH="$DIR:$DIR/app:${PYTHONPATH:-}" pytest -q "$DIR/tests"
+          test -d "$DIR"
+          echo "DIR=$DIR" >> "$GITHUB_ENV"
+      - name: Run module tests
+        shell: bash
+        run: PYTHONPATH="$DIR:$DIR/app:${PYTHONPATH:-}" pytest -q "$DIR/tests"
 
   notebook-runtime:
     runs-on: ubuntu-latest
@@ -53,20 +71,27 @@ jobs:
       fail-fast: false
       matrix:
         module: ['04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43']
-    env: {MOCK_LLM: 'true', OPENAI_API_KEY: '', ANTHROPIC_API_KEY: ''}
+    env:
+      MOCK_LLM: 'true'
+      OPENAI_API_KEY: ''
+      ANTHROPIC_API_KEY: ''
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: ${{ env.PYTHON_VERSION }}}
-      - run: python -m pip install -r requirements-dev.txt
-      - run: python 00-course-roadmap/run_notebook_qa.py --modules "${{ matrix.module }}-${{ matrix.module }}" --timeout 300
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Install notebook QA dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Execute canonical module notebook(s)
+        run: python 00-course-roadmap/run_notebook_qa.py --modules "${{ matrix.module }}-${{ matrix.module }}" --timeout 300
 
   final-qa-gate:
     if: always()
     needs: [structural-qa, module-tests, notebook-runtime]
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Require all canonical QA jobs to pass
+        run: |
           test "${{ needs.structural-qa.result }}" = "success"
           test "${{ needs.module-tests.result }}" = "success"
           test "${{ needs.notebook-runtime.result }}" = "success"
