@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import hashlib
 import re
 from typing import Iterable
@@ -23,6 +23,8 @@ class RawDocument:
     text: str
     sensitivity: str = "internal"
     acl: tuple[str, ...] = ()
+    source_version: str = "1"
+    pipeline_version: str = "1"
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,9 @@ class ProtectedDocument:
     text: str
     findings: tuple[Finding, ...]
     content_hash: str
+    source_content_hash: str
+    source_version: str
+    pipeline_version: str
     quarantined: bool
     reason: str | None = None
     sensitivity: str = "internal"
@@ -54,14 +59,14 @@ CARD = re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)")
 
 
 def parse(raw: RawDocument) -> tuple[DocumentElement, ...]:
-    """Minimal deterministic parser used as a teaching reference."""
+    """Minimal deterministic parser preserving page and element lineage."""
     elements: list[DocumentElement] = []
     for page, page_text in enumerate(raw.text.split("\f"), start=1):
         for number, block in enumerate(page_text.split("\n\n"), start=1):
             text = block.strip()
             if not text:
                 continue
-            digest = hashlib.sha256(f"{raw.document_id}:{page}:{number}:{text}".encode()).hexdigest()[:16]
+            digest = hashlib.sha256(f"{raw.document_id}:{raw.source_version}:{page}:{number}:{text}".encode()).hexdigest()[:16]
             elements.append(DocumentElement(digest, page, "default", "paragraph", text))
     return tuple(elements)
 
@@ -75,7 +80,13 @@ def detect_pii(text: str) -> tuple[Finding, ...]:
     ):
         for match in pattern.finditer(text):
             findings.append(Finding(kind, match.start(), match.end(), match.group(), confidence))
-    return tuple(sorted(findings, key=lambda f: (f.start, f.end)))
+    # Remove overlapping lower-priority matches deterministically.
+    selected: list[Finding] = []
+    for finding in sorted(findings, key=lambda f: (f.start, -(f.end - f.start), -f.confidence)):
+        if any(finding.start < existing.end and existing.start < finding.end for existing in selected):
+            continue
+        selected.append(finding)
+    return tuple(sorted(selected, key=lambda f: (f.start, f.end)))
 
 
 def redact(text: str, findings: Iterable[Finding]) -> str:
@@ -90,16 +101,21 @@ def protect(raw: RawDocument, allowed_kinds: set[str] | None = None) -> Protecte
     allowed = allowed_kinds or set()
     prohibited = tuple(f for f in findings if f.kind not in allowed)
     protected_text = redact(raw.text, prohibited)
+    # Low-confidence prohibited findings require human review rather than silent indexing.
     quarantined = any(f.confidence < 0.75 for f in prohibited)
     reason = "low-confidence sensitive finding requires review" if quarantined else None
-    digest = hashlib.sha256(protected_text.encode()).hexdigest()
+    source_hash = hashlib.sha256(raw.text.encode("utf-8")).hexdigest()
+    protected_hash = hashlib.sha256(protected_text.encode("utf-8")).hexdigest()
     return ProtectedDocument(
         raw.document_id,
         raw.tenant_id,
         raw.source_uri,
         protected_text,
         findings,
-        digest,
+        protected_hash,
+        source_hash,
+        raw.source_version,
+        raw.pipeline_version,
         quarantined,
         reason,
         raw.sensitivity,
@@ -109,14 +125,20 @@ def protect(raw: RawDocument, allowed_kinds: set[str] | None = None) -> Protecte
 
 def validate(document: ProtectedDocument) -> list[str]:
     errors: list[str] = []
+    if not document.document_id:
+        errors.append("missing document_id")
     if not document.tenant_id:
         errors.append("missing tenant_id")
     if not document.source_uri:
         errors.append("missing source_uri")
     if not document.acl:
         errors.append("missing ACL")
+    if not document.source_version:
+        errors.append("missing source_version")
+    if not document.pipeline_version:
+        errors.append("missing pipeline_version")
     if document.quarantined:
         errors.append(document.reason or "quarantined")
-    if not document.content_hash:
+    if not document.content_hash or not document.source_content_hash:
         errors.append("missing content_hash")
     return errors
