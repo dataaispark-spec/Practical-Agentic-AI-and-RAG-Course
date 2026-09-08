@@ -23,11 +23,6 @@ jobs:
 
   module-tests:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 8
-      matrix:
-        module: ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43']
     env:
       MOCK_LLM: 'true'
       OPENAI_API_KEY: ''
@@ -39,44 +34,50 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install runtime QA dependencies
         run: python -m pip install -r requirements-dev.txt
-      - name: Resolve canonical implementation path
+      - name: Run all 43 module test suites
         shell: bash
         run: |
-          set -euo pipefail
-          case "${{ matrix.module }}" in
-            01) DIR="01-ai-systems-thinking";;
-            02) DIR="02-python-ai-engineering";;
-            03) DIR="03-fastapi-testing";;
-            06) DIR="06-rag-from-first-principles";;
-            31) DIR="31-knowledge-engineering-graph-rag";;
-            32) DIR="32-graph-engineering-temporal-knowledge";;
-            33) DIR="33-agentic-knowledge-graph-construction";;
-            34) DIR="34-graph-vector-hybrid-retrieval";;
-            35) DIR="35-compounding-knowledge-llm-wiki";;
-            36) DIR="36-loop-engineering";;
-            37) DIR="37-harness-engineering";;
-            38) DIR="38-long-running-autonomous-agents";;
-            39) DIR="39-skills-memory-continual-harnesses";;
-            40) DIR="40-environments-verifiers-agentic-rl";;
-            41) DIR="41-recursive-self-improving-agents";;
-            42) DIR="42-computer-use-always-on-ai-teammates";;
-            43) DIR="43-frontier-graph-rag-agentic-capstone";;
-            *) DIR="$(find . -maxdepth 1 -type d -name "${{ matrix.module }}-*" -print -quit | sed 's#^./##')";;
-          esac
-          test -d "$DIR"
-          test -d "$DIR/tests"
-          echo "DIR=$DIR" >> "$GITHUB_ENV"
-      - name: Run module tests
-        shell: bash
-        run: PYTHONPATH="$DIR:$DIR/app:${PYTHONPATH:-}" pytest -q "$DIR/tests"
+          set -uo pipefail
+          failures=()
+          for n in $(seq -w 1 43); do
+            case "$n" in
+              01) DIR="01-ai-systems-thinking";;
+              02) DIR="02-python-ai-engineering";;
+              03) DIR="03-fastapi-testing";;
+              06) DIR="06-rag-from-first-principles";;
+              31) DIR="31-knowledge-engineering-graph-rag";;
+              32) DIR="32-graph-engineering-temporal-knowledge";;
+              33) DIR="33-agentic-knowledge-graph-construction";;
+              34) DIR="34-graph-vector-hybrid-retrieval";;
+              35) DIR="35-compounding-knowledge-llm-wiki";;
+              36) DIR="36-loop-engineering";;
+              37) DIR="37-harness-engineering";;
+              38) DIR="38-long-running-autonomous-agents";;
+              39) DIR="39-skills-memory-continual-harnesses";;
+              40) DIR="40-environments-verifiers-agentic-rl";;
+              41) DIR="41-recursive-self-improving-agents";;
+              42) DIR="42-computer-use-always-on-ai-teammates";;
+              43) DIR="43-frontier-graph-rag-agentic-capstone";;
+              *) DIR="$(find . -maxdepth 1 -type d -name "${n}-*" -print -quit | sed 's#^./##')";;
+            esac
+            echo "===== TEST M$n: $DIR ====="
+            if [[ ! -d "$DIR/tests" ]]; then
+              echo "M$n missing tests directory"
+              failures+=("M$n")
+              continue
+            fi
+            if ! PYTHONPATH="$DIR:$DIR/app:${PYTHONPATH:-}" pytest -q "$DIR/tests"; then
+              failures+=("M$n")
+            fi
+          done
+          if (( ${#failures[@]} > 0 )); then
+            echo "FAILED MODULES: ${failures[*]}"
+            exit 1
+          fi
+          echo "All 43 module test suites passed."
 
   notebook-runtime:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 8
-      matrix:
-        module: ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31','32','33','34','35','36','37','38','39','40','41','42','43']
     env:
       MOCK_LLM: 'true'
       OPENAI_API_KEY: ''
@@ -88,8 +89,8 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Install notebook QA dependencies
         run: python -m pip install -r requirements-dev.txt
-      - name: Execute canonical module notebook(s)
-        run: python 00-course-roadmap/run_notebook_qa.py --modules "${{ matrix.module }}-${{ matrix.module }}" --timeout 300
+      - name: Execute all 43 canonical module notebooks
+        run: python 00-course-roadmap/run_notebook_qa.py --modules 1-43 --timeout 300 --continue-on-error
 
   final-qa-gate:
     if: always()
