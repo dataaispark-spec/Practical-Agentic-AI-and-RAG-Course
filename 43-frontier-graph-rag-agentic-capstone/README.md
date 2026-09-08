@@ -1,729 +1,1028 @@
 # Module 43 — Frontier Graph-RAG Agentic Capstone
 
-## Expanded long-form course chapter
+## Purpose
+
+Module 43 is the integration point for the course. It is not another isolated framework tutorial. It asks the learner to assemble the mechanisms developed across the course into a single governed system that can retrieve structured and unstructured knowledge, reason over relationships, plan work, use tools, maintain durable state, operate across long-running tasks, interact with computer environments when appropriate, verify outcomes, and improve under controlled evaluation.
+
+The central engineering question is not **“How autonomous can the model be?”** It is **“How much useful autonomy can the system safely sustain while remaining observable, recoverable, verifiable, and economically defensible?”**
+
+The capstone uses the course mental model:
+
+> **Agent = Model + Harness + Environment + Tools + State + Policy + Budget + Verification**
+
+The model supplies probabilistic reasoning. The harness supplies control. The environment supplies the real execution surface. Tools expose bounded capabilities. State supplies continuity. Policy constrains what is allowed. Budgets constrain resource consumption. Verification establishes whether the result is acceptable. The capstone succeeds when these pieces form explicit contracts rather than an opaque chain of prompts.
+
+## What makes Module 43 different
+
+Earlier modules study mechanisms separately. Module 43 studies their interactions and the failure modes created by those interactions.
+
+A Graph-RAG system can retrieve the right documents but traverse the wrong relationship. A graph can contain correct facts but stale temporal validity. A hybrid retriever can improve recall while increasing contradictory evidence. A capable agent can form a plausible plan but operate on stale state. Durable execution can preserve state while accidentally replaying a side effect. Computer use can ground the model in a real interface while exposing new risks from dynamic UI state. A self-improvement loop can optimize a benchmark while degrading real-world behavior.
+
+The capstone therefore treats **composition risk** as a first-class engineering problem.
+
+The learner should be able to answer, for every major operation:
+
+- What evidence was available?
+- How was that evidence retrieved?
+- Why did the system select this path?
+- Which state was authoritative at the time of the decision?
+- Which tool or environment action was permitted?
+- Which policies were evaluated?
+- Which side effects occurred?
+- Which verifier accepted or rejected the result?
+- What happens after interruption, timeout, contradiction, or restart?
+- Which artifacts and versions produced the behavior?
+- What evidence would justify changing the system?
+
+## Learning outcomes
+
+By the end of the capstone, the learner should be able to design and defend a frontier Graph-RAG agentic system that integrates:
+
+1. **Knowledge graph reasoning** for entities, relationships, provenance, constraints, and multi-hop context.
+2. **Hybrid retrieval** combining graph traversal, lexical retrieval, vector retrieval, filtering, and reranking according to the query type.
+3. **A production harness** that manages context, tool access, state transitions, budgets, checkpoints, recovery, replay, and telemetry.
+4. **Durable autonomy** so long-running work can pause, resume, recover from worker failure, and avoid duplicate side effects.
+5. **Computer use** where an external application or interface is genuinely the best execution surface.
+6. **Verification** at retrieval, planning, tool, state, and final-outcome boundaries.
+7. **Controlled self-improvement** in which candidate changes are evaluated before promotion and can be rolled back.
+
+These outcomes directly reflect the repository’s Module 43 objective vocabulary: frontier Graph-RAG capstone, knowledge graph, hybrid retrieval, harness, durable autonomy, computer use, verification, and self-improvement. fileciteturn679file0L2-L2
+
+## Capstone system: AegisAI Frontier Graph-RAG
+
+The reference system is **AegisAI Frontier Graph-RAG**, an enterprise assistant for complex investigations and operational workflows. The exact business domain may vary, but the system must contain a meaningful mixture of:
+
+- unstructured documents;
+- structured records;
+- a typed knowledge graph;
+- temporal and provenance information;
+- lexical and vector indexes;
+- agent state and checkpoints;
+- bounded tools;
+- an execution environment;
+- policy enforcement;
+- independent verification;
+- observability;
+- evaluation datasets;
+- candidate-change promotion and rollback.
+
+A useful reference workload is an investigation request such as:
+
+> “Determine the current status of a supplier issue, identify the affected products and contracts, explain the evidence and timeline, compare current facts with policy, and prepare the next permitted operational action.”
+
+That request is deliberately difficult. It requires entity resolution, multi-hop relationships, temporal reasoning, evidence gathering, contradictory-source handling, policy evaluation, planning, state management, and possibly a tool or computer action. It is therefore a better capstone than a simple question-answering demo.
+
+## Reference architecture
+
+```text
+                           ┌─────────────────────────┐
+                           │        User / Event      │
+                           └────────────┬────────────┘
+                                        │
+                              request + identity
+                                        │
+                           ┌────────────▼────────────┐
+                           │   Policy / Risk Gate    │
+                           └────────────┬────────────┘
+                                        │
+                           ┌────────────▼────────────┐
+                           │   Agent Harness         │
+                           │ context / budget /     │
+                           │ state / checkpoint      │
+                           └───────┬───────┬─────────┘
+                                   │       │
+                   ┌───────────────┘       └──────────────────┐
+                   │                                          │
+          ┌────────▼────────┐                       ┌─────────▼────────┐
+          │ Retrieval Plane │                       │ Execution Plane  │
+          │ graph + lexical │                       │ tools + computer │
+          │ + vector + rank │                       │ environment      │
+          └───────┬─────────┘                       └─────────┬────────┘
+                  │                                           │
+          ┌───────▼──────────┐                    ┌──────────▼─────────┐
+          │ Evidence Context │                    │ Durable State       │
+          │ provenance       │                    │ checkpoint / lease │
+          │ timestamps       │                    │ idempotency         │
+          └───────┬──────────┘                    └──────────┬─────────┘
+                  │                                           │
+                  └────────────────┬──────────────────────────┘
+                                   │
+                         ┌─────────▼─────────┐
+                         │ Verification      │
+                         │ factual / policy  │
+                         │ action / outcome  │
+                         └─────────┬─────────┘
+                                   │
+                         ┌─────────▼─────────┐
+                         │ Audit + Evaluation│
+                         │ trace / metrics   │
+                         │ regression / cost │
+                         └───────────────────┘
+```
 
-This course is a practical engineering progression from deterministic software and LLM applications to retrieval, tools, stateful agents, distributed coordination, knowledge graphs, durable autonomy, verification, computer use, and controlled self-improvement. The governing idea is that an AI system becomes production-grade not by adding more model calls, but by adding explicit boundaries around probabilistic decisions. Throughout the 43 modules, the learner repeatedly asks: What is the goal? What state is authoritative? What evidence is available? What actions are permitted? What budget applies? What must be verified? What happens when a dependency fails? What must be observable and auditable? What evidence would justify changing the design?
+The architecture intentionally keeps **retrieval, execution, state, policy, and verification separate**. A model may propose a retrieval query, traversal, plan, or tool invocation, but those proposals do not become trusted facts merely because they are fluent.
 
-The course uses the AegisAI mental model: Model + Harness + Environment + Tools + State + Policy + Budget + Verification. Retrieval is treated as a knowledge mechanism; an agent loop is treated as a decision-and-action mechanism; a harness is treated as the control plane around the model; and a verifier is treated as an independent check on outcomes. This distinction prevents a common engineering failure in which a prompt is asked to perform authorization, correctness checking, persistence, and business policy simultaneously.
+## 1. Knowledge graph as a reasoning substrate
 
-Every module follows the same learning rhythm: Predict → Run → Observe → Explain → Break → Debug → Measure → Improve → Defend. The examples therefore emphasize observable mechanisms, explicit contracts, failure injection, metrics, and regression tests. The notebooks and applications are intended to work with deterministic fakes and synthetic data wherever possible, so that the learner can understand the mechanism before depending on a commercial provider.
+A graph is valuable when relationships carry decision-making meaning that is awkward to reconstruct from isolated text chunks.
 
-## Module-specific learning contract
+For the capstone, define explicit node types such as:
 
-This expanded chapter deepens the repository canonical learning objectives for **Module 43: Frontier Graph-RAG Agentic Capstone**. The objective vocabulary is preserved: frontier Graph-RAG capstone, knowledge graph, hybrid retrieval, harness, durable autonomy, computer use, verification, and self-improvement. Each concept is connected to architecture, implementation, failure analysis, evaluation, security, operations and system-design reasoning.
+- `Person`
+- `Organization`
+- `Product`
+- `Contract`
+- `Incident`
+- `Requirement`
+- `Policy`
+- `Document`
+- `System`
+- `Location`
+- `Event`
 
-## First-principles concepts
+Then define typed relationships such as:
 
-### 1. Frontier Graph-Rag Capstone
+- `OWNS`
+- `SUPPLIES`
+- `AFFECTS`
+- `GOVERNS`
+- `MENTIONS`
+- `DEPENDS_ON`
+- `VIOLATES`
+- `SUPERSEDES`
+- `LOCATED_AT`
+- `APPROVED_BY`
+- `DERIVED_FROM`
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+The graph should also carry metadata such as provenance, source identifier, confidence or extraction status where relevant, creation time, effective time, expiration time, and version.
 
-### 2. Knowledge Graph
+### Why typing matters
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+A flat graph can return superficially related nodes. A typed graph allows deterministic constraints such as:
 
-### 3. Hybrid Retrieval
+> “Find active contracts supplied by the affected organization whose products are linked to the incident and whose governing policy is currently effective.”
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+That query contains semantics that should not depend entirely on a language model remembering which relationship means what.
 
-### 4. Harness
+### Provenance is part of the fact
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+For a production-quality knowledge graph, the statement:
 
-### 5. Durable Autonomy
+`Supplier A -> SUPPLIES -> Product B`
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+is incomplete. The system should also know where the relationship came from and whether the supporting evidence is current.
 
-### 6. Computer Use
+A stronger representation is conceptually:
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+```text
+subject: Supplier A
+predicate: SUPPLIES
+object: Product B
+source: contract_2026_014
+observed_at: 2026-08-20
+valid_from: 2026-01-01
+valid_to: 2026-12-31
+status: active
+```
 
-### 7. Verification
+The exact storage representation is implementation-dependent; the contract is not.
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+### Entity resolution
 
-### 8. Self-Improvement
+Graph quality collapses when the same real-world entity receives multiple identities. The capstone should explicitly test cases such as:
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+- “ABC Ltd.” versus “ABC Limited”;
+- parent company versus subsidiary;
+- product code changes;
+- renamed business units;
+- duplicated incident records.
 
-## Architecture and control boundaries
+Entity resolution should produce a decision with evidence and confidence rather than silently merging records. High-impact merges should be reviewable and reversible.
 
-### 1. Frontier Graph-Rag Capstone
+### Temporal knowledge
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+Current truth and historical truth are not interchangeable. The graph should distinguish at least:
 
-### 2. Knowledge Graph
+- event time;
+- observation time;
+- effective time;
+- expiration or supersession time.
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+Consider a policy that was effective from January through June and replaced in July. A query run in September should not cite the old rule as current merely because it has a stronger embedding similarity.
 
-### 3. Hybrid Retrieval
+## 2. Graph-RAG: retrieval beyond nearest neighbors
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+Graph-RAG should not be reduced to “vector search plus a graph database.” The design should begin from query intent.
 
-### 4. Harness
+### Retrieval modes
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+A practical capstone can route queries into several retrieval modes:
 
-### 5. Durable Autonomy
+**Lexical retrieval** is valuable for exact terminology, identifiers, names, error codes, clauses, and phrases.
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+**Vector retrieval** is valuable for semantic similarity when terminology varies.
 
-### 6. Computer Use
+**Graph retrieval** is valuable when relationships, constraints, provenance, and multi-hop paths determine relevance.
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+**Hybrid retrieval** combines these signals when no single retrieval mode is sufficient.
 
-### 7. Verification
+The right question is not “Which retriever is best?” but:
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+> “Which evidence-generation strategy best matches this query and this failure cost?”
 
-### 8. Self-Improvement
+### Candidate generation versus ranking
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+Keep these concepts separate.
 
-## Mechanisms and implementation reasoning
+Candidate generation should maximize the chance that relevant evidence enters the pool. Ranking should decide which evidence is most useful for the final context.
 
-### 1. Frontier Graph-Rag Capstone
+For example:
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+```text
+query
+  ├── BM25 / lexical → candidates A, B, C, D
+  ├── vector search → candidates B, D, E, F
+  └── graph traversal → paths through B, E, G
+                    ↓
+                union / dedupe
+                    ↓
+              reranking
+                    ↓
+            context selection
+```
 
-### 2. Knowledge Graph
+A system that reranks only what vector retrieval returned cannot recover a critical exact-match document that never entered the candidate pool.
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+### Reciprocal Rank Fusion
 
-### 3. Hybrid Retrieval
+A simple fusion mechanism is Reciprocal Rank Fusion:
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+\[
+RRF(d) = \sum_i \frac{1}{k + rank_i(d)}
+\]
 
-### 4. Harness
+The important engineering idea is not the formula itself. It is that heterogeneous retrievers can contribute evidence without pretending their raw scores are directly comparable.
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+### Graph traversal as evidence expansion
 
-### 5. Durable Autonomy
+Suppose the user asks why a product is affected by an incident. A direct semantic match may retrieve the incident report but miss the causal chain:
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+```text
+Incident
+   ↓ AFFECTS
+Product
+   ↓ PRODUCED_BY
+Supplier
+   ↓ GOVERNED_BY
+Contract
+   ↓ SUBJECT_TO
+Policy
+```
 
-### 6. Computer Use
+A graph traversal can deliberately expose that path. The language model can then explain the path using grounded evidence rather than inventing relationships.
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+### Multi-hop limits
 
-### 7. Verification
+More hops are not automatically better. Each additional hop can increase noise and introduce provenance uncertainty. Set explicit traversal limits, relationship allowlists, and evidence thresholds. A good system can say:
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+> “The available evidence supports a two-hop relationship; the third hop depends on an unverified association.”
 
-### 8. Self-Improvement
+That is stronger than producing a confident four-hop story.
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+## 3. Evidence construction and answer grounding
 
-## Industry scenarios and worked examples
+The capstone should construct an evidence package rather than dumping search results into a prompt.
 
-### 1. Frontier Graph-Rag Capstone
+A useful evidence record contains:
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+```text
+source_id
+source_type
+document_or_node_id
+relevance_signal
+provenance
+observed_at
+valid_from
+valid_to
+extraction_version
+retrieval_method
+```
 
-### 2. Knowledge Graph
+The final model context should make it possible to trace important claims back to the evidence that supports them.
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+### Contradictory evidence
 
-### 3. Hybrid Retrieval
+A realistic system will find contradictions:
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+- one system says a contract is active;
+- another says it was terminated;
+- a later document supersedes the earlier one;
+- timestamps disagree;
+- two extraction pipelines create conflicting graph edges.
 
-### 4. Harness
+Do not ask the model to casually “pick the truth.” Define deterministic precedence rules where possible, surface unresolved conflicts, and preserve both claims with provenance.
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+A useful final answer may therefore distinguish:
 
-### 5. Durable Autonomy
+1. **Supported current facts**
+2. **Historical facts**
+3. **Conflicting evidence**
+4. **Unknown or unverified claims**
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+## 4. The harness: the control plane around the model
 
-### 6. Computer Use
+The harness is the core differentiator between a demo agent and an engineered agent.
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+The harness should own responsibilities such as:
 
-### 7. Verification
+- state transitions;
+- context assembly;
+- tool availability;
+- policy checks;
+- budget accounting;
+- retry limits;
+- timeouts;
+- checkpointing;
+- cancellation;
+- structured telemetry;
+- verification calls;
+- recovery behavior.
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+The model should not be the only authority for these controls.
 
-### 8. Self-Improvement
+### Deterministic boundary pattern
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+A robust loop resembles:
 
-## Failure-first engineering
+```text
+observe state
+   ↓
+retrieve / inspect evidence
+   ↓
+model proposes next step
+   ↓
+validate proposal
+   ↓
+policy check
+   ↓
+budget check
+   ↓
+execute bounded action
+   ↓
+verify result
+   ↓
+commit state transition
+   ↓
+checkpoint + trace
+   ↓
+continue / pause / terminate
+```
 
-### 1. Frontier Graph-Rag Capstone
+The important ordering is intentional. Do not commit a state transition before the action result is known when the transition asserts that the action succeeded.
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+### Budgeting
 
-### 2. Knowledge Graph
+Budget should be multi-dimensional:
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+- wall-clock time;
+- model calls;
+- tool calls;
+- retrieval calls;
+- graph traversal depth;
+- tokens or context size;
+- monetary cost;
+- action count.
 
-### 3. Hybrid Retrieval
+A single “max iterations” value is usually too crude for a frontier agent.
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+## 5. Durable autonomy
 
-### 4. Harness
+Durable autonomy means that useful work survives process failure and can be resumed without losing the reasoning state needed for safe continuation.
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+### Checkpoints
 
-### 5. Durable Autonomy
+A checkpoint should capture enough state to resume deterministically or at least safely. Depending on the architecture, this can include:
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+- task identifier;
+- state version;
+- current plan;
+- completed steps;
+- pending steps;
+- evidence references;
+- tool outcomes;
+- approval status;
+- budget remaining;
+- leases or ownership metadata;
+- artifact versions.
 
-### 6. Computer Use
+Avoid storing secrets simply because the checkpoint is convenient. Persistence expands the attack surface.
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+### Leases and heartbeats
 
-### 7. Verification
+For long-running work, the system must know whether a worker still owns the task. A lease with a heartbeat can prevent two workers from simultaneously believing they own the same execution.
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+The failure case matters more than the happy path:
 
-### 8. Self-Improvement
+```text
+Worker A owns lease
+      ↓
+Worker A crashes
+      ↓
+heartbeat stops
+      ↓
+lease expires
+      ↓
+Worker B acquires lease
+      ↓
+resume from checkpoint
+```
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+The recovery design must still address side effects that happened immediately before Worker A failed.
 
-## Experiments and measurement
+### Idempotency
 
-### 1. Frontier Graph-Rag Capstone
+A durable system must assume retries and replay.
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+For example, if an agent submits an external ticket and crashes before recording success, a retry may submit the same ticket again. The solution is not “tell the model not to retry.” The tool contract should expose an idempotency key or equivalent deduplication mechanism.
 
-### 2. Knowledge Graph
+## 6. Computer use as a controlled execution surface
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+Computer use should enter the capstone only where the external interface is genuinely necessary. It adds capabilities but also introduces a new environment model.
 
-### 3. Hybrid Retrieval
+The agent may need to reason from:
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+- screenshots;
+- DOM or accessibility structure;
+- current page state;
+- selected application context;
+- dialog state;
+- transient UI information.
 
-### 4. Harness
+### Stale state
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+A screenshot or DOM snapshot is evidence about a point in time, not a perpetual truth.
 
-### 5. Durable Autonomy
+Consider:
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+```text
+observe page
+   ↓
+model chooses “Approve”
+   ↓
+page changes
+   ↓
+button moves / disappears
+   ↓
+blind click
+```
 
-### 6. Computer Use
+The harness should re-check relevant state before a consequential action.
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+### Action tiers
 
-### 7. Verification
+A useful risk model distinguishes:
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+**Read-only:** navigation, inspection, searching.
 
-### 8. Self-Improvement
+**Reversible write:** editing a draft or changing a non-critical field.
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+**High-impact or irreversible:** financial approval, deletion, publication, external commitment.
 
-## Security, governance and responsible operation
+The higher the action risk, the stronger the requirements for fresh state, deterministic policy, explicit confirmation, and independent verification.
 
-### 1. Frontier Graph-Rag Capstone
+### Human approval
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+Human approval is not a substitute for good engineering. It is a deliberately placed control boundary for actions where the residual risk is unacceptable for unattended execution.
 
-### 2. Knowledge Graph
+The approval request should make the decision understandable:
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+- what will happen;
+- why the agent proposes it;
+- what evidence supports it;
+- what policy authorizes it;
+- what could go wrong.
 
-### 3. Hybrid Retrieval
+## 7. Verification as an architectural layer
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+Verification should be independent enough to catch failures in the component that produced the proposal.
 
-### 4. Harness
+### Verification levels
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+**Retrieval verification:** Did required evidence enter the candidate set?
 
-### 5. Durable Autonomy
+**Graph verification:** Are traversed relationships valid, typed, and temporally applicable?
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+**Plan verification:** Are preconditions satisfied? Are steps internally consistent?
 
-### 6. Computer Use
+**Tool verification:** Did the tool return a valid result? Did the expected side effect occur?
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+**Policy verification:** Was the action permitted for this identity, tenant, data class, and risk level?
 
-### 7. Verification
+**Outcome verification:** Does the final state satisfy the task’s acceptance criteria?
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+### Example
 
-### 8. Self-Improvement
+Suppose the agent proposes:
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+> “Disable Supplier A because it violated the active security requirement.”
 
-## Production design and operational readiness
+A verifier should not merely ask another model whether this sentence sounds reasonable. It should check, where possible:
 
-### 1. Frontier Graph-Rag Capstone
+1. the supplier identity;
+2. the exact requirement;
+3. the policy version and effective dates;
+4. the evidence of violation;
+5. whether the violation is confirmed or only suspected;
+6. whether the actor has authority to disable the supplier;
+7. whether a required approval exists;
+8. whether the external system actually reflects the intended state after execution.
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+## 8. Self-improvement without uncontrolled self-modification
 
-### 2. Knowledge Graph
+A frontier agent should not be allowed to rewrite its own production behavior and immediately trust the result.
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+Use a candidate promotion pipeline:
 
-### 3. Hybrid Retrieval
+```text
+observed failure / opportunity
+          ↓
+ improvement hypothesis
+          ↓
+ candidate artifact
+          ↓
+ isolated evaluation
+          ↓
+ adversarial / failure tests
+          ↓
+ held-out evaluation
+          ↓
+ canary or shadow comparison
+          ↓
+ promotion gate
+          ↓
+ production
+          ↓
+ monitoring + rollback
+```
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+### Candidate artifacts
 
-### 4. Harness
+Candidates may include:
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+- retrieval policies;
+- ranking rules;
+- prompts;
+- tool routing policies;
+- graph extraction rules;
+- verifier thresholds;
+- context assembly logic;
+- workflow policies.
 
-### 5. Durable Autonomy
+Each candidate should have a version and provenance.
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+### Improvement hypotheses
 
-### 6. Computer Use
+An improvement hypothesis should be falsifiable.
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+Weak:
 
-### 7. Verification
+> “Make the agent smarter.”
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+Strong:
 
-### 8. Self-Improvement
+> “Adding graph-path evidence for relationship-heavy queries will increase supported multi-hop answer rate without increasing unsupported-claim rate by more than the approved threshold.”
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+The second statement defines both a target and a safety constraint.
 
-## Debugging and incident analysis
+### Reward hacking and evaluator gaming
 
-### 1. Frontier Graph-Rag Capstone
+An optimizer can improve the measured score without improving the underlying task. For example:
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+- optimizing citation count rather than citation correctness;
+- choosing easier queries;
+- learning quirks of a particular evaluator;
+- increasing refusal rates to avoid difficult cases;
+- generating longer answers that appear more complete but contain more unsupported material.
 
-### 2. Knowledge Graph
+The capstone should therefore use multiple evaluators, held-out tests, slice analysis, and adversarial cases rather than a single scalar score.
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+## 9. Evaluation strategy
 
-### 3. Hybrid Retrieval
+The capstone needs an evaluation stack that measures both usefulness and safety.
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+### Retrieval metrics
 
-### 4. Harness
+Depending on the system and dataset, include:
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+- Recall@K;
+- Precision@K;
+- MRR or another ranking metric;
+- graph-path hit rate;
+- evidence coverage;
+- temporal-validity accuracy.
 
-### 5. Durable Autonomy
+### Generation metrics
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+Use task-appropriate measures such as:
 
-### 6. Computer Use
+- groundedness;
+- citation correctness;
+- answer completeness;
+- unsupported-claim rate;
+- contradiction rate.
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+### Agent metrics
 
-### 7. Verification
+Track:
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+- task success rate;
+- successful completion without human intervention;
+- unnecessary tool calls;
+- verification failure rate;
+- recovery success rate;
+- termination correctness.
 
-### 8. Self-Improvement
+### Durable-operation metrics
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+Track:
 
-## Exercises and independent practice
+- checkpoint recovery success;
+- duplicate-side-effect rate;
+- lease conflict rate;
+- resume latency;
+- abandoned task rate.
 
-### 1. Frontier Graph-Rag Capstone
+### Computer-use metrics
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+Track:
 
-### 2. Knowledge Graph
+- successful environment grounding;
+- stale-state detection rate;
+- action verification success;
+- blocked unsafe actions;
+- human-approval escalation rate.
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+### Self-improvement metrics
 
-### 3. Hybrid Retrieval
+Track both improvement and regression:
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+- delta in primary task metric;
+- unsupported behavior delta;
+- cost delta;
+- latency delta;
+- failure severity delta;
+- rollback frequency.
 
-### 4. Harness
+A candidate should never be promoted because one metric improved while a critical safety metric regressed beyond its allowed threshold.
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+## 10. Failure-first test plan
 
-### 5. Durable Autonomy
+A capstone is incomplete without deliberately breaking it.
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+### Retrieval failures
 
-### 6. Computer Use
+Inject:
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+- missing documents;
+- duplicate documents;
+- stale documents;
+- conflicting records;
+- incorrect metadata;
+- graph edges with bad provenance;
+- entity-resolution collisions.
 
-### 7. Verification
+Expected behavior should distinguish “not found” from “found but conflicting.”
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+### Agent-loop failures
 
-### 8. Self-Improvement
+Inject:
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+- repeated tool calls;
+- invalid tool arguments;
+- cyclic planning;
+- budget exhaustion;
+- malformed intermediate state;
+- verifier rejection;
+- cancellation.
 
-## System-design review
+The harness should terminate or recover according to an explicit policy rather than depending on the model to notice the problem.
 
-### 1. Frontier Graph-Rag Capstone
+### Durable-execution failures
 
-The first principle for Frontier Graph-RAG Agentic Capstone is to make the boundary explicit. A production implementation should state what enters the component, what leaves it, what state it may mutate, what policy constrains it, and what evidence proves that the operation succeeded. When those boundaries are hidden inside a framework, failures become difficult to localize. In this module, frontier Graph-RAG capstone should therefore be treated as an engineering contract rather than a collection of API calls. A useful review asks which decisions are deterministic, which decisions are probabilistic, which data is trusted, and which observations are required to reconstruct a failed run.
+Inject:
 
-### 2. Knowledge Graph
+- process crash after checkpoint;
+- crash before checkpoint;
+- lease expiration;
+- delayed heartbeat;
+- duplicate worker;
+- tool timeout;
+- retry after ambiguous external result.
 
-A practical way to learn Frontier Graph-RAG Agentic Capstone is to start with the smallest executable mechanism and then add one production constraint at a time. Begin with a happy-path example for knowledge graph; add typed inputs; introduce malformed input; introduce a dependency timeout; add a policy restriction; add telemetry; then replay the same scenario. This progression makes cause and effect visible. Do not add architecture merely because the technology is available. Add it when a measured requirement or failure mode justifies the complexity.
+The key assertion is that recovery must preserve consistency and avoid unsafe duplicate side effects.
 
-### 3. Hybrid Retrieval
+### Computer-use failures
 
-In an enterprise setting, Frontier Graph-RAG Agentic Capstone rarely exists in isolation. Identity, tenancy, data classification, latency objectives, cost limits, audit requirements and operational ownership all change the design. A mechanism that works for a personal prototype may be unacceptable when the same request can cross a tenant boundary or trigger a financial action. The correct design combines the technical mechanism with deterministic controls outside the model. hybrid retrieval becomes useful only when the surrounding system can enforce who may use it, what evidence it may access, what it may change, and how the result will be checked.
+Inject:
 
-### 4. Harness
+- DOM changes;
+- stale screenshot;
+- unexpected modal;
+- changed account or tenant context;
+- permission downgrade;
+- partial action completion.
 
-The failure-first perspective is especially important for Frontier Graph-RAG Agentic Capstone. A system that works on the happy path proves very little. The stronger question is what happens when input is incomplete, a dependency is slow, returned data is contradictory, a user disconnects, policy changes, state is stale, or an attacker deliberately supplies hostile content. For harness, define the expected observable before injecting the fault. Record the first failing stage, containment boundary, recovery action, and regression assertion. This converts debugging from intuition into an experiment.
+The system should detect when its observation is stale and re-ground before acting.
 
-### 5. Durable Autonomy
+### Self-improvement failures
 
-Measurement should accompany every meaningful change to Frontier Graph-RAG Agentic Capstone. Quality, latency and cost are often coupled. Larger context may improve answer quality but increase latency and token cost. More retries may improve availability during short outages while amplifying load during a large outage. A stronger verifier may reduce unsafe actions while increasing response time. For durable autonomy, maintain a scorecard containing task success, relevant quality metrics, p50/p95 latency, resource consumption, failure rate, and policy or verification failures. The goal is to make trade-offs explicit.
+Inject:
 
-### 6. Computer Use
+- candidate that improves one benchmark while harming another;
+- evaluator gaming;
+- regression in rare slices;
+- cost blow-up;
+- prompt injection influencing candidate generation;
+- verifier bypass attempt.
 
-A useful architecture diagram for Frontier Graph-RAG Agentic Capstone separates mechanism from control. The mechanism performs useful work; the control plane establishes identity, validates inputs, enforces authorization, manages budgets, records telemetry, and verifies outcomes. For computer use, draw both layers. Ask whether the system would remain safe if the model produced a wrong answer. If not, a critical control is probably living in the wrong place. Production AI engineering moves irreversible decisions away from untrusted model output and toward deterministic policy, typed interfaces and independent verification.
+The promotion gate should reject these candidates.
 
-### 7. Verification
+## 11. Security model
 
-Versioning is part of the technical design of Frontier Graph-RAG Agentic Capstone, not an administrative afterthought. Prompts, models, embeddings, retrieval indexes, policies, tools, graph schemas, memory records and verifier rules can all change behavior. If verification changes without a version identifier, a later incident may be impossible to reproduce. A practical implementation records the versions involved in each important run and defines a rollback boundary. The learner should be able to answer not only what the system did, but which artifact versions caused it to behave that way.
+The capstone combines many capabilities, so security must be compositional.
 
-### 8. Self-Improvement
+### Identity and tenant isolation
 
-The final production question for Frontier Graph-RAG Agentic Capstone is whether the mechanism improves the business outcome enough to justify its operational cost. A technically elegant system can still be a poor product if it is too slow, too expensive, too difficult to monitor, or too risky. For self-improvement, compare the mechanism with a simpler baseline. State the baseline, measurable improvement, new failure modes, and operational burden. Use the simplest architecture that meets the requirement, and add complexity only when evidence shows that the additional capability creates value.
+Authorization should be evaluated before sensitive retrieval and before high-impact action. Tenant filtering must apply before context construction, not merely after an answer is generated.
 
-## Assessment and mastery
+### Prompt injection
 
-### Question 1
+Documents, web pages, tickets, files, and application content are untrusted inputs. Retrieved text should not acquire tool authority simply because it appears in context.
 
-Explain how you would design, implement, test, observe and defend **frontier Graph-RAG capstone** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+Separate:
 
-### Question 2
+- **data** to be interpreted;
+- **instructions** to be followed;
+- **policy** to be enforced.
 
-Explain how you would design, implement, test, observe and defend **knowledge graph** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The harness should determine which instructions have authority.
 
-### Question 3
+### Tool security
 
-Explain how you would design, implement, test, observe and defend **hybrid retrieval** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+Every tool should have:
 
-### Question 4
+- typed input validation;
+- authorization;
+- bounded scope;
+- timeout;
+- idempotency where applicable;
+- audit logging;
+- explicit error semantics.
 
-Explain how you would design, implement, test, observe and defend **harness** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+### Graph poisoning
 
-### Question 5
+Graph ingestion can be attacked by introducing false entities or relationships. Treat extraction as proposal generation followed by validation. High-impact graph changes should be reviewable, provenance-backed, and reversible.
 
-Explain how you would design, implement, test, observe and defend **durable autonomy** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+### Persistent-state risks
 
-### Question 6
+Long-lived memory and checkpoints can retain sensitive or stale information. Define retention, supersession, deletion, and access-control rules explicitly.
 
-Explain how you would design, implement, test, observe and defend **computer use** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+## 12. Observability and auditability
 
-### Question 7
+A frontier system must be explainable at the level of engineering evidence, not merely natural-language rationale.
 
-Explain how you would design, implement, test, observe and defend **verification** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+A useful trace connects:
 
-### Question 8
+```text
+request_id
+  → retrieval calls
+  → graph traversals
+  → evidence set
+  → model decisions
+  → tool proposals
+  → policy decisions
+  → tool executions
+  → state transitions
+  → verifier results
+  → final outcome
+```
 
-Explain how you would design, implement, test, observe and defend **self-improvement** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+### What to record
 
-### Question 9
+Record enough to reproduce and diagnose behavior without indiscriminately storing secrets or raw sensitive content.
 
-Explain how you would design, implement, test, observe and defend **frontier Graph-RAG capstone** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+Useful fields include:
 
-### Question 10
+- request and task identifiers;
+- actor and tenant identifiers where appropriate;
+- model/version identifiers;
+- retrieval configuration;
+- graph schema/version;
+- policy version;
+- tool/version;
+- checkpoint version;
+- latency;
+- token or cost attribution;
+- verification outcome;
+- final status.
 
-Explain how you would design, implement, test, observe and defend **knowledge graph** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+### Trace interpretation
 
-### Question 11
+When an incident occurs, find the **first incorrect observable state**, not merely the last error message.
 
-Explain how you would design, implement, test, observe and defend **hybrid retrieval** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+Example:
 
-### Question 12
+```text
+retrieval correct
+   ↓
+graph path incorrect
+   ↓
+model explanation plausible
+   ↓
+plan based on wrong path
+   ↓
+verifier catches policy mismatch
+```
 
-Explain how you would design, implement, test, observe and defend **harness** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The verifier prevented impact, but the root cause was earlier: graph-path construction.
 
-### Question 13
+## 13. Production-readiness gates
 
-Explain how you would design, implement, test, observe and defend **durable autonomy** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The capstone should not be declared complete because the demo works once.
 
-### Question 14
+A release candidate should satisfy gates for:
 
-Explain how you would design, implement, test, observe and defend **computer use** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+| Area | Example acceptance question |
+|---|---|
+| Retrieval | Does the system retrieve required evidence on the defined golden set? |
+| Graph | Are critical relationships typed, provenance-backed, and temporally valid? |
+| Grounding | Are important claims supported by traceable evidence? |
+| Harness | Are budgets, retries, state transitions, and termination deterministic? |
+| Durability | Can interrupted tasks resume without corrupting state or duplicating side effects? |
+| Computer use | Are stale observations detected before high-impact actions? |
+| Verification | Can invalid plans/actions/results be rejected independently? |
+| Security | Are tenant, authorization, injection, and egress boundaries enforced? |
+| Evaluation | Are critical slices and adversarial cases passing? |
+| Operations | Can an engineer diagnose and roll back a bad release? |
+| Cost | Is cost per successful task within the approved envelope? |
 
-### Question 15
+## 14. Worked scenario: investigation to governed action
 
-Explain how you would design, implement, test, observe and defend **verification** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+Consider an investigation into a supplier-linked product incident.
 
-### Question 16
+### Step 1 — Interpret request
 
-Explain how you would design, implement, test, observe and defend **self-improvement** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The system identifies the task as an investigation with possible operational impact. The risk gate determines that read access is allowed but any supplier suspension requires additional authority.
 
-### Question 17
+### Step 2 — Build candidate evidence
 
-Explain how you would design, implement, test, observe and defend **frontier Graph-RAG capstone** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The retrieval plane searches:
 
-### Question 18
+- incident records;
+- product documentation;
+- supplier records;
+- contracts;
+- active policies;
+- recent operational events.
 
-Explain how you would design, implement, test, observe and defend **knowledge graph** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+Lexical retrieval catches exact identifiers. Vector search finds semantically related documents. Graph traversal connects incident → product → supplier → contract → policy.
 
-### Question 19
+### Step 3 — Resolve time
 
-Explain how you would design, implement, test, observe and defend **hybrid retrieval** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The system filters out superseded policies and distinguishes current from historical contractual state.
 
-### Question 20
+### Step 4 — Construct evidence graph
 
-Explain how you would design, implement, test, observe and defend **harness** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The system records which statements are supported and where conflicts remain.
 
-### Question 21
+### Step 5 — Plan
 
-Explain how you would design, implement, test, observe and defend **durable autonomy** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The model proposes:
 
-### Question 22
+1. confirm incident status;
+2. identify affected products;
+3. identify active supplier obligations;
+4. check applicable policy;
+5. prepare an operational recommendation.
 
-Explain how you would design, implement, test, observe and defend **computer use** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The harness verifies preconditions and budget before each stage.
 
-### Question 23
+### Step 6 — Verify
 
-Explain how you would design, implement, test, observe and defend **verification** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+A deterministic verifier checks that every high-impact recommendation has evidence, valid policy context, and authorized actor scope.
 
-### Question 24
+### Step 7 — Execute or escalate
 
-Explain how you would design, implement, test, observe and defend **self-improvement** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+For a low-risk action, the tool may execute. For a supplier suspension, the system requests human approval because the consequence is high-impact.
 
-### Question 25
+### Step 8 — Persist
 
-Explain how you would design, implement, test, observe and defend **frontier Graph-RAG capstone** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+The task checkpoint records the state and evidence references. After an interruption, the task resumes without repeating completed idempotent actions.
 
-### Question 26
+This scenario demonstrates why Module 43 is an integration capstone: no individual mechanism is enough.
 
-Explain how you would design, implement, test, observe and defend **knowledge graph** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+## 15. Design principles to defend in a review
 
-### Question 27
+A strong capstone team should be able to defend these decisions:
 
-Explain how you would design, implement, test, observe and defend **hybrid retrieval** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+### Why Graph-RAG instead of vector-only RAG?
 
-### Question 28
+Because some questions depend on explicit relationships, provenance, constraints, and multi-hop structure. The choice should be demonstrated with workload evidence, not fashion.
 
-Explain how you would design, implement, test, observe and defend **harness** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+### Why hybrid retrieval instead of a single retriever?
 
-### Question 29
+Because exact identifiers, semantic descriptions, and relationship paths have different retrieval characteristics. Hybrid retrieval should earn its complexity through measurable gains.
 
-Explain how you would design, implement, test, observe and defend **durable autonomy** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+### Why a harness instead of a model-only loop?
 
-### Question 30
+Because authorization, budgeting, state management, retries, checkpoints, and deterministic policy should not depend on probabilistic text generation.
 
-Explain how you would design, implement, test, observe and defend **computer use** in a real Frontier Graph-RAG Agentic Capstone system. Include one happy path, one failure path, one security concern, one measurable metric and one regression test.
+### Why durable execution?
 
-## Mastery gate
+Because long-running tasks fail, workers restart, networks time out, and external side effects can become ambiguous. Durable state converts process failure into a recoverable condition.
 
-Completion means being able to explain the mechanism from first principles, implement the smallest working version, deliberately break it, identify the first failing boundary from evidence, repair it, measure the repaired system against a baseline, and defend the resulting trade-offs. The learner should also explain when not to use the mechanism. Production expertise includes recognizing when a simpler deterministic solution is safer, cheaper and easier to operate.
+### Why independent verification?
 
-## Deep case study 1: Frontier Graph-Rag Capstone
+Because the component that proposes an action can be wrong. A verifier provides a separate acceptance boundary.
 
-Consider an enterprise workload in which frontier Graph-RAG capstone is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+### Why controlled self-improvement?
 
-This case also illustrates why frontier Graph-RAG capstone cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+Because autonomous optimization can exploit the evaluation system, degrade rare slices, increase cost, or bypass intended constraints. Promotion must therefore be evidence-based.
 
-## Deep case study 2: Knowledge Graph
+## 16. Exercises
 
-Consider an enterprise workload in which knowledge graph is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+### Exercise A — Build the minimal vertical slice
 
-This case also illustrates why knowledge graph cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+Implement one request end-to-end:
 
-## Deep case study 3: Hybrid Retrieval
+`request → hybrid retrieval → evidence package → model proposal → verification → final answer`
 
-Consider an enterprise workload in which hybrid retrieval is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+Use deterministic synthetic data first.
 
-This case also illustrates why hybrid retrieval cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+### Exercise B — Add graph reasoning
 
-## Deep case study 4: Harness
+Construct a typed graph and answer a multi-hop question that vector retrieval alone cannot reliably answer.
 
-Consider an enterprise workload in which harness is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+### Exercise C — Inject contradiction
 
-This case also illustrates why harness cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+Create two conflicting source records with different effective dates. Make the system explain the conflict instead of silently choosing one.
 
-## Deep case study 5: Durable Autonomy
+### Exercise D — Make the task durable
 
-Consider an enterprise workload in which durable autonomy is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+Persist checkpoints and simulate a worker crash between two stages. Resume from state and prove that no duplicate side effect occurs.
 
-This case also illustrates why durable autonomy cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+### Exercise E — Add computer use
 
-## Deep case study 6: Computer Use
+Introduce a synthetic browser or application environment. Change the UI between observation and action and verify that the agent refuses to act on stale state.
 
-Consider an enterprise workload in which computer use is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+### Exercise F — Build a verifier
 
-This case also illustrates why computer use cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+Create deterministic checks for authorization, required evidence, preconditions, and postconditions.
 
-## Deep case study 7: Verification
+### Exercise G — Create a bad self-improvement candidate
 
-Consider an enterprise workload in which verification is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+Construct a candidate that improves one evaluation metric but harms another. Confirm that the promotion gate rejects it.
 
-This case also illustrates why verification cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+### Exercise H — Incident reconstruction
 
-## Deep case study 8: Self-Improvement
+Given only a trace, identify the first incorrect state, root cause, failed containment boundary, and regression test that should be added.
 
-Consider an enterprise workload in which self-improvement is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+## 17. Mastery challenge
 
-This case also illustrates why self-improvement cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+The final challenge is to answer a high-impact, relationship-heavy request using the complete capstone stack.
 
-## Deep case study 9: Frontier Graph-Rag Capstone
+The submission should include:
 
-Consider an enterprise workload in which frontier Graph-RAG capstone is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+1. architecture diagram;
+2. graph schema and provenance model;
+3. retrieval routing strategy;
+4. evidence-package format;
+5. harness state machine;
+6. checkpoint and recovery design;
+7. tool contracts and authorization model;
+8. computer-use safety boundary if used;
+9. verification strategy;
+10. evaluation dataset and metrics;
+11. failure-injection report;
+12. cost and latency measurements;
+13. security/threat model;
+14. rollout and rollback plan;
+15. self-improvement promotion policy.
 
-This case also illustrates why frontier Graph-RAG capstone cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+## 18. Final engineering perspective
 
-## Deep case study 10: Knowledge Graph
+Module 43 should leave the learner with a durable design instinct: **frontier capability does not come from removing controls; it comes from making capable systems more explicit, testable, and recoverable.**
 
-Consider an enterprise workload in which knowledge graph is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+Graph-RAG provides richer evidence structure. The harness turns model output into bounded decisions. Durable state turns transient execution into recoverable workflows. Computer use connects the agent to real environments. Verification turns confidence into acceptance criteria. Self-improvement turns observed failure into an experimental process rather than an uncontrolled rewrite.
 
-This case also illustrates why knowledge graph cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+The resulting system is not “an autonomous chatbot.” It is a governed computational system whose intelligence emerges from the interaction of retrieval, structured knowledge, probabilistic reasoning, deterministic controls, tools, state, environment feedback, verification, and evaluation.
 
-## Deep case study 11: Hybrid Retrieval
+The final standard is therefore not:
 
-Consider an enterprise workload in which hybrid retrieval is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
+> “Can the agent complete the demo?”
 
-This case also illustrates why hybrid retrieval cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+It is:
 
-## Deep case study 12: Harness
+> **“Can the system complete useful work, explain its evidence, respect its boundaries, survive failure, recover safely, prove its outcome, and improve only when the evidence supports the change?”**
 
-Consider an enterprise workload in which harness is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why harness cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 13: Durable Autonomy
-
-Consider an enterprise workload in which durable autonomy is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why durable autonomy cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 14: Computer Use
-
-Consider an enterprise workload in which computer use is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why computer use cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 15: Verification
-
-Consider an enterprise workload in which verification is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why verification cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 16: Self-Improvement
-
-Consider an enterprise workload in which self-improvement is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why self-improvement cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 17: Frontier Graph-Rag Capstone
-
-Consider an enterprise workload in which frontier Graph-RAG capstone is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why frontier Graph-RAG capstone cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 18: Knowledge Graph
-
-Consider an enterprise workload in which knowledge graph is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why knowledge graph cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 19: Hybrid Retrieval
-
-Consider an enterprise workload in which hybrid retrieval is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why hybrid retrieval cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 20: Harness
-
-Consider an enterprise workload in which harness is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why harness cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 21: Durable Autonomy
-
-Consider an enterprise workload in which durable autonomy is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why durable autonomy cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 22: Computer Use
-
-Consider an enterprise workload in which computer use is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why computer use cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 23: Verification
-
-Consider an enterprise workload in which verification is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why verification cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 24: Self-Improvement
-
-Consider an enterprise workload in which self-improvement is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why self-improvement cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 25: Frontier Graph-Rag Capstone
-
-Consider an enterprise workload in which frontier Graph-RAG capstone is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why frontier Graph-RAG capstone cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 26: Knowledge Graph
-
-Consider an enterprise workload in which knowledge graph is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why knowledge graph cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 27: Hybrid Retrieval
-
-Consider an enterprise workload in which hybrid retrieval is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why hybrid retrieval cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 28: Harness
-
-Consider an enterprise workload in which harness is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why harness cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 29: Durable Autonomy
-
-Consider an enterprise workload in which durable autonomy is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why durable autonomy cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 30: Computer Use
-
-Consider an enterprise workload in which computer use is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why computer use cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 31: Verification
-
-Consider an enterprise workload in which verification is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why verification cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 32: Self-Improvement
-
-Consider an enterprise workload in which self-improvement is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why self-improvement cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 33: Frontier Graph-Rag Capstone
-
-Consider an enterprise workload in which frontier Graph-RAG capstone is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why frontier Graph-RAG capstone cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 34: Knowledge Graph
-
-Consider an enterprise workload in which knowledge graph is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why knowledge graph cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 35: Hybrid Retrieval
-
-Consider an enterprise workload in which hybrid retrieval is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why hybrid retrieval cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
-
-## Deep case study 36: Harness
-
-Consider an enterprise workload in which harness is a material part of the decision path. Start by stating the business outcome, users, data boundary, expected action, and failure cost. Establish a baseline before introducing the module mechanism. Then define the smallest implementation that demonstrates it. Instrument the boundary so a reviewer can see inputs, intermediate state, decisions, outputs, latency and resource usage without exposing secrets or unnecessary personal data. Introduce one controlled failure at a time: malformed input, missing evidence, stale state, dependency timeout, authorization mismatch, contradictory data, unexpected model output, or policy change. For each failure, identify the first observable deviation from the expected contract. Do not jump directly to a fix; write a hypothesis and run an experiment that distinguishes it from competing explanations. After the fix, replay the same failure and verify that the regression test protects the boundary. Finally, compare the improved implementation with the baseline on task success, latency, cost and operational complexity. A strong design review should explain why the architecture is sufficient, which alternatives were rejected, what evidence supports the decision, and what future observation would justify revisiting it.
-
-This case also illustrates why harness cannot be delegated blindly to a language model. If the model produces an incorrect recommendation, the surrounding application must still enforce authorization, budget, data access, and verification. Where an action is irreversible or high impact, introduce an approval boundary or deterministic verifier. Where information is uncertain, represent uncertainty rather than manufacturing confidence. Where knowledge can become stale, record versions and effective dates. Where the workload is multi-tenant, apply tenant isolation before candidate truncation or action selection. Where the system is long-running, persist state and make side effects idempotent. These controls are the engineering environment in which the module mechanism becomes trustworthy.
+That is the engineering bar for a frontier Graph-RAG agentic capstone.
