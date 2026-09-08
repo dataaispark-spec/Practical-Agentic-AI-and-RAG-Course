@@ -2,25 +2,27 @@
 
 > **Industry-oriented companion course and hands-on engineering lab** built around the IITM Pravartak Agentic AI & RAG curriculum, extended into frontier agent engineering.
 
-This repository is the practical engineering workspace for a 38-module learning journey. The first 30 modules preserve the core IITM-aligned progression; Modules 31–38 extend it into loop engineering, harness engineering, long-running agents, skills and memory, environments and verifiers, controlled self-improvement, computer use, always-on workers, and the integrated AegisAI capstone.
+This repository is the practical engineering workspace for a **38-module** learning journey. Modules 1–30 preserve the core IITM-aligned progression; Modules 31–38 extend it into loop engineering, harness engineering, long-running agents, skills and memory, environments and verifiers, controlled self-improvement, computer use, always-on workers, and the integrated AegisAI frontier capstone.
 
 ## Course philosophy
 
-Many AI courses teach APIs and frameworks first. Real engineering work starts earlier:
+This is not an API-tour course. It is an engineering course built around a repeated question: **what must be deterministic around a probabilistic model to make the system reliable?**
+
+Learners repeatedly answer:
 
 - What problem are we solving?
-- Does the problem actually need an LLM, RAG, an agent, or a multi-agent system?
+- Does it need an LLM, RAG, an agent, or multiple agents?
 - What information must be grounded?
-- What can the model be trusted to decide?
+- What may the model decide?
 - What actions may the system take?
-- Who owns the agent's authority?
-- How does the system stop, recover and resume?
-- How do we verify that the task really succeeded?
-- How do we measure quality before and after a change?
-- How do we debug a probabilistic system from production evidence?
-- How do we control latency, reliability, security, privacy, and cost?
+- Who owns authority and approval?
+- How does the system stop, recover, restart, and resume?
+- How do we verify that the task actually succeeded?
+- How do we measure quality, latency, reliability, safety, and cost?
+- How do we debug from production evidence?
+- How do we improve a system without silently degrading it?
 
-This course trains those decisions first and the frameworks second.
+**Frameworks come after mechanisms.** The course uses small, inspectable implementations before introducing framework-level abstractions.
 
 ## Core mental model
 
@@ -36,68 +38,60 @@ Agent
  + Evaluation
 ```
 
-The central principle is:
+The central engineering principle is:
 
 > **LLMs are probabilistic; production software is contractual.**
 >
-> The engineering discipline comes from the control layer between those worlds: schemas, validation, retrieval, policies, tests, retries, budgets, observability, evaluation, security, and operational limits.
+> Reliability comes from the control layer between those worlds: contracts, schemas, validation, retrieval, policy, tests, retries, budgets, observability, evaluation, security, persistence, and operational limits.
 
 ## Learning contract
 
-Learners are expected to:
+For every module, the learner should:
 
-1. Understand the concept.
+1. Understand the problem and mechanism.
 2. Implement a working baseline.
-3. Break the system intentionally.
-4. Diagnose the failure from evidence.
-5. Measure quality, latency, reliability, safety, and cost.
-6. Improve the design.
-7. Document trade-offs.
-8. Defend the implementation in an interview-style discussion.
+3. Run the supplied tests/examples.
+4. Break the system intentionally.
+5. Diagnose the failure from evidence.
+6. Measure meaningful quality/operations/security signals.
+7. Improve the implementation.
+8. Document trade-offs and production implications.
+9. Defend the design in interview/system-design discussion.
 
-Completion is evidence-based: GitHub artifacts, tests, experiment results, architecture decisions, and mastery assessments matter more than passive lesson completion.
+Completion is **evidence-based**: runnable artifacts, tests, experiments, failure investigations, architecture decisions, and mastery gates matter more than passive lesson completion.
 
-## Continuous capstone: AegisAI
+## Continuous capstone — AegisAI
 
-Across the modules we evolve a single platform, **AegisAI**, from a simple AI system into a governed enterprise Agentic RAG and autonomous-work platform.
+Across the course we evolve one platform, **AegisAI**, from a simple AI application into a governed enterprise Agentic RAG and autonomous-work platform.
 
 ```text
 User / Event
      |
-     v
 Gateway -> Auth / Tenant -> Task Contract -> Router
                                       |
-                  +-------------------+------------------+
-                  |                   |                  |
-                Simple               RAG                Agent
-                                      |                  |
-                          Retrieval / Reranker        Harness
-                                      |                  |
-                                      +--------+---------+
-                                               |
-                  +----------------------------+-------------------------+
-                  |             |              |             |           |
-                Tools        Memory         Skills        Computer     MCP
-                  |             |              |            Use          |
-                  +-------------+--------------+-------------+------------+
-                                               |
-                                         Policy Engine
-                                               |
-                                       Agent Loop Engine
-                                               |
-                                      Verification / Eval
-                                               |
-                           +-------------------+------------------+
-                           |                                      |
-                       Approval                               Recovery
-                           |                                      |
-                           +-------------------+------------------+
-                                               |
-                                            Result
-                                               |
-                              Audit / Observability / Metrics
-                                               |
-                                      Controlled Improvement
+             +------------------------+----------------------+
+             |                        |                      |
+           Simple                    RAG                   Agent
+                                      |                      |
+                              Retrieval / Reranker        Harness
+                                      |                      |
+             +------------------------+----------------------+
+             |          |          |          |              |
+           Tools      Memory     Skills     MCP        Computer Use
+             |          |          |          |              |
+             +----------+----------+----------+--------------+
+                                      |
+                               Policy / Budget
+                                      |
+                                 Agent Loop
+                                      |
+                           Verification / Evaluation
+                                      |
+                       Approval / Recovery / Durability
+                                      |
+                          Audit / Observability / Metrics
+                                      |
+                           Controlled Improvement
 ```
 
 ## 38-module progression
@@ -139,7 +133,7 @@ Gateway -> Auth / Tenant -> Task Contract -> Router
 ### MCP
 
 23. **MCP Fundamentals** — MCP Client
-24. **Enterprise MCP Server** — MCP Server
+24. **Enterprise MCP Server** — Governed MCP Server
 
 ### Production AI
 
@@ -191,7 +185,7 @@ Security
 Audit
 ```
 
-Every autonomous capability must answer all twelve questions.
+Every autonomous capability must be able to answer all twelve questions.
 
 ## Module anatomy
 
@@ -201,19 +195,21 @@ Every module follows the same engineering loop:
 Problem
   -> Concepts
   -> Internals
-  -> Visual architecture
-  -> Real-world case
-  -> Build
-  -> Test
-  -> Break
-  -> Debug
-  -> Measure
-  -> Optimize
-  -> Secure
-  -> Document
-  -> Interview
-  -> Mastery gate
+  -> Architecture / Diagram
+  -> Industry Scenario
+  -> Guided Build
+  -> Tests
+  -> Failure Injection
+  -> Debugging
+  -> Measurement
+  -> Optimization
+  -> Security
+  -> Documentation
+  -> Interview / System Design
+  -> Mastery Gate
 ```
+
+The Colab practice standard expands this into a **Predict → Run → Observe → Explain → Break → Debug → Measure → Improve → Defend** cycle. Notebooks are intended to be executable learning environments, not merely slide decks.
 
 ## Engineering ladder
 
@@ -231,32 +227,34 @@ The objective is to move repeatedly through all seven levels.
 
 ## Failure-first engineering
 
-The course deliberately injects failures including:
+The course deliberately injects failures such as:
 
-- bad retrieval
-- stale and duplicate knowledge
-- hallucination
-- malformed tool calls
-- infinite loops
-- no-progress loops
-- tool timeouts
-- worker crashes
-- stale checkpoints
-- approval expiry
-- unauthorized actions
-- prompt injection
-- credential leakage
-- UI drift
-- distributed coordination failures
-- cost explosions
-- evaluator gaming
-- self-improvement regressions
+- retrieval misses, stale knowledge, duplicate knowledge, and hallucination
+- malformed tool calls and poisoned tool output
+- infinite/no-progress loops and retry storms
+- worker crashes, stale checkpoints, duplicate side effects, and approval expiry
+- prompt injection, memory poisoning, credential leakage, SSRF-style abuse, and cross-tenant access
+- distributed coordination races, delayed/lost messages, overload, and partial failure
+- UI drift, stale screens, duplicate submissions, and unattended destructive actions
+- cost explosions and budget bypass
+- evaluator gaming, reward hacking, benchmark leakage, and self-improvement regressions
 
-Every failure should become an observable incident with a root cause, containment strategy, recovery path and regression test.
+A meaningful failure is expected to become an observable incident with a root cause, containment strategy, recovery path, and regression test.
+
+## Frontier engineering principles
+
+1. **Framework second, mechanism first.**
+2. **Deterministic control around probabilistic decisions.**
+3. **Verification is first-class.**
+4. **Persistence changes the threat model.**
+5. **Self-improvement requires external gates.**
+6. **Long-running autonomy requires durable state, leases, budgets, and recovery.**
+7. **Computer use requires environment grounding, policy checks, approval boundaries, and post-action verification.**
+8. **More agents are not automatically better; multi-agent complexity must earn its cost and risk.**
 
 ## Interview readiness
 
-Every module includes:
+Every module includes some combination of:
 
 - concept questions
 - coding challenges
@@ -264,49 +262,65 @@ Every module includes:
 - production incidents
 - architecture/system-design prompts
 - trade-off questions
+- security/privacy scenarios
 - communication/behavioral prompts
 
-The course does **not** guarantee that a learner will pass every interview. It is designed to make interview preparation concrete through working systems, measurements, failure analysis, and defensible engineering decisions.
+The course does **not** guarantee that a learner will pass every interview. It is designed to make preparation concrete through working systems, measurements, failure analysis, and defensible engineering decisions.
 
 ## GitHub learning evidence
 
-A completed learner should be able to point to:
+A strong completion portfolio should contain:
 
-- runnable code
-- tests
-- diagrams
-- benchmark results
-- failure investigations
-- architecture decision records (ADRs)
+- runnable implementations
+- tests and assertions
+- architecture diagrams and ADRs
+- Colab experiments and observations
+- benchmark/evaluation results
+- failure investigations and regression tests
 - threat/security notes
-- evaluation datasets
-- deployment manifests
-- a continuously evolving capstone
+- deployment/release artifacts
+- a continuously evolving AegisAI capstone
 
-## QA and deep-practice implementation
+## QA, checkpoints, and deep-practice standard
 
-The repository now includes a formal 38-module QA standard and a module-specific deep-practice implementation pack. These are used to prevent the common failure mode of having a notebook that exists but is too shallow to teach engineering judgment.
+The repository includes explicit QA documentation so that **"a notebook exists" is not mistaken for "the module is deeply teachable and executable."**
 
-- `00-course-roadmap/COURSE-QA-AUDIT-AND-UPGRADE-PLAN.md` — definition of done and audit matrix
-- `00-course-roadmap/COLAB-PRACTICE-NOTEBOOK-STANDARD.md` — required Colab learning sequence
-- `00-course-roadmap/MODULE-DEEP-PRACTICE-IMPLEMENTATION-PACK.md` — module-by-module BUILD/TRY/BREAK/MEASURE/DEFEND targets
+- `00-course-roadmap/COURSE-QA-AUDIT-AND-UPGRADE-PLAN.md` — 38-module definition of done and audit matrix
+- `00-course-roadmap/COLAB-PRACTICE-NOTEBOOK-STANDARD.md` — required deep-practice notebook sequence
+- `00-course-roadmap/MODULE-DEEP-PRACTICE-IMPLEMENTATION-PACK.md` — module-by-module BUILD / TRY / BREAK / MEASURE / DEFEND targets
 - `00-course-roadmap/course_qa_checker.py` — executable structural QA checker
-- `.github/workflows/course-qa.yml` — CI check for repository learning signals
+- `00-course-roadmap/run_notebook_qa.py` — clean-kernel notebook execution runner
+- `.github/workflows/course-qa.yml` — structural, module-test, notebook-runtime, and final aggregate CI gates
 
-The QA checker is deliberately non-blocking during the upgrade phase. Once all modules satisfy the contract, CI can be switched to `--strict`. Structural QA is explicitly different from notebook execution QA.
+**Important:** structural QA, module tests, and notebook execution are separate evidence layers. A green structural check does not prove runtime correctness; a passing notebook does not prove pedagogical completeness.
+
+## Current checkpoint — 2026-09-08
+
+- 38-module course architecture: **established**
+- Frontier roadmap and control plane: **established**
+- Modules 1–38 canonical structure/notebooks: **present**
+- Deep-practice QA specification: **established**
+- Runtime QA runner/dependency baseline: **implemented**
+- Frontier runtime implementations for Modules 31–37: **implemented with tests**
+- Module 06 duplicate: **consolidated to `06-rag-from-first-principles/` and old duplicate artifacts removed**
+- Latest M06–M09 hardening: **implemented** for deterministic ranking/filtering, embedding reproducibility, PII/provenance controls, and authorization-before-candidate-truncation
+- CI module identifiers: **hardened to preserve zero-padded module paths**
+- Latest CI: **re-triggered; final green status not yet claimed until the full matrix completes**
+
+### Definition of done
+
+The course should only be called **38-module QA complete** when all of the following are evidenced on the same current revision:
+
+1. structural QA passes;
+2. all 35 module-test jobs for Modules 04–38 pass;
+3. all 35 notebook-runtime jobs for Modules 04–38 pass;
+4. the final aggregate QA gate passes;
+5. Modules 31–38 retain real runnable implementations, not notebook-only placeholders;
+6. every module meets the deep-practice notebook contract or has an explicitly documented exception;
+7. no duplicate/ambiguous canonical module paths remain.
+
+Until then, the repository status is **upgrade + validation in progress**, not "fully QA certified."
 
 ## Source and extension policy
 
-The IITM Pravartak curriculum is treated as the source curriculum for the core module sequencing and terminology. Practical implementation, engineering exercises, benchmarks, security labs, frontier-agent material, and interview preparation are course extensions and should be read as such.
-
-## Current build status
-
-- Core course architecture: established
-- Frontier roadmap: established
-- Modules 1–38: canonical module structure and Colab notebooks present
-- Deep-practice upgrade specification: implemented across all 38 modules
-- Structural QA automation: implemented
-- Module 6 duplicate directories: retained pending deliberate merge of their useful material
-- Notebook execution validation: still requires a dedicated runtime/CI pass and is **not** claimed as complete
-
-The next implementation priority is to close module-specific QA gaps, execute notebook/test validation, and only then enable strict CI completion gates.
+The IITM Pravartak curriculum is treated as the source curriculum for the core module sequencing and terminology. Practical implementation, engineering exercises, benchmarks, security labs, frontier-agent material, and interview preparation are course extensions and should be read as such. Where an implementation is intentionally educational/deterministic rather than production infrastructure, the module documentation should say so explicitly.
