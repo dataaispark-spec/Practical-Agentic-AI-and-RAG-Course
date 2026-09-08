@@ -23,7 +23,7 @@ def test_first_failure_is_earliest_event():
 
 def test_cost_attribution():
     es=events()+[TraceEvent('e5','r1','e4','e4','tool.completed','tool',5,{'cost_usd':.25})]
-    assert d:=TraceDebugger(es)
+    d=TraceDebugger(es)
     assert d.cost_by_component()['tool']==.25
 
 
