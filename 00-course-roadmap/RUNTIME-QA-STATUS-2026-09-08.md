@@ -1,15 +1,17 @@
 # Runtime QA Status — 2026-09-08
 
-## Scope
-Modules 04–38, with special attention to notebook execution, module test isolation, dependency reproducibility, frontier implementation depth, and the Module 06 duplicate.
+## Checkpoint purpose
 
-## Implemented in this pass
+This checkpoint records the latest repository state after the Module 06 consolidation, Module 06–09 hardening pass, and CI workflow correction. It deliberately separates **implemented changes** from **verified runtime evidence**.
 
-- Course-wide `requirements-dev.txt` for pytest + notebook execution.
+## Implemented at this checkpoint
+
+- Course-wide `requirements-dev.txt` for pytest and notebook execution.
 - `00-course-roadmap/run_notebook_qa.py` for clean-kernel notebook execution with mock-provider defaults.
-- CI now has structural QA, a 35-way module-test matrix, a 35-way notebook-runtime matrix, and a final aggregate gate.
-- CI module test jobs isolate each module's local `app/` package through `PYTHONPATH`.
-- Added production-shaped runtime implementations and tests for Modules 31–37 where frontier material was previously notebook/README heavy:
+- CI with structural QA, a 35-way module-test matrix, a 35-way notebook-runtime matrix, and a final aggregate gate.
+- CI module identifiers are now explicit zero-padded strings (`04` … `38`), preventing YAML numeric coercion from breaking directory resolution.
+- Module test jobs isolate each module's local `app/` package through `PYTHONPATH`.
+- Production-shaped runtime implementations/tests for Modules 31–37:
   - M31 loop engine
   - M32 harness boundary
   - M33 durable worker
@@ -17,26 +19,35 @@ Modules 04–38, with special attention to notebook execution, module test isola
   - M35 environment/verifier kernel
   - M36 bounded self-improvement experiment engine
   - M37 governed computer-use sandbox
+- Module 06 has been consolidated to the canonical `06-rag-from-first-principles/` implementation; obsolete duplicate code/tests/notebook artifacts under `06-rag-first-principles/` were removed.
+- M06 hardening: deterministic tie-breaking and filter-before-ranking/truncation behavior.
+- M07 hardening: deterministic cross-process embeddings, dimension validation, tenant-safe filtering, deterministic ranking, and explicit Recall@K semantics.
+- M08 hardening: document lineage/provenance, deterministic PII handling/redaction, quarantine behavior, ACL validation, and source/protected hashes.
+- M09 hardening: deterministic lexical+dense retrieval, RRF/reranking, metadata filtering, and authorization before candidate truncation.
+- Root `README.md` refreshed to reflect the 38-module checkpoint and the evidence-based definition of done.
 
-## First runtime findings
+## Evidence already established
 
-The first execution pass immediately found a real packaging/import defect in existing modules 12 and 19: their tests import `app.*`, but the original CI job only exposed repository root on `PYTHONPATH`. This is now corrected in the workflow by adding each module directory and its `app/` directory to the test path.
+The repository inspection confirms the above files/changes are present on `main`. The latest CI run before the workflow correction was still queued and therefore was not valid evidence of final success. Earlier runtime evidence had exposed module-path/import problems, including the zero-padding issue in the CI matrix; the workflow has now been corrected rather than assuming those jobs passed.
 
-The first structural QA job passed. Notebook jobs and remaining module-test jobs are intentionally still treated as runtime evidence rather than assumed green.
+## Current CI state
 
-## Important non-claims
+A new push-triggered QA run is expected from the workflow correction and README/status updates. **Do not interpret the presence of queued jobs as a pass.** Final status must be taken from the completed structural, module-test, notebook-runtime, and aggregate-gate jobs for the current revision.
 
-- This file does not declare the 38-module final QA gate passed.
-- A successful notebook execution does not by itself prove pedagogical completeness.
-- A structural QA pass does not prove runtime correctness.
-- The Module 06 duplicate has not been deleted automatically; content must be compared and merged deliberately.
+## Non-claims
 
-## Next gate
+- This checkpoint does **not** declare the 38-module QA gate passed.
+- Structural QA is not runtime QA.
+- Passing tests is not proof of pedagogical completeness.
+- Passing notebooks is not proof that every module contains sufficient depth, failure injection, measurement, solutions, and industry context.
+- The educational implementations are not automatically production infrastructure; their module READMEs must state scope and limitations.
 
-1. Complete current CI matrix.
-2. Capture every failing module/notebook.
-3. Fix failures and rerun.
-4. Add missing module-specific reference implementations rather than generic scaffolds.
-5. Consolidate Module 06.
-6. Verify frontier modules 31–38 against the deep-practice notebook standard.
-7. Run final 38-module structural + test + notebook gate.
+## Next verification gate
+
+1. Inspect the new CI run and all matrix jobs.
+2. Capture every failing module test and notebook execution failure.
+3. Fix failures at source and rerun.
+4. Verify Modules 31–38 app/test/notebook integration.
+5. Audit notebook depth against `COLAB-PRACTICE-NOTEBOOK-STANDARD.md`.
+6. Confirm no duplicate or ambiguous canonical module paths remain.
+7. Only after all evidence is green, update this checkpoint and the root README to record **38-module QA complete**.
