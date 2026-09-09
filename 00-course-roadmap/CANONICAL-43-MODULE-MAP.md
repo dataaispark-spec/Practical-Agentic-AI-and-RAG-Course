@@ -87,7 +87,7 @@ All learner-facing links, CI paths, notebook identities and implementation refer
 Every canonical module should expose, directly or through an explicit companion boundary:
 
 - `README.md` with module identity, theory/mechanism, architecture, exercises, failure/security guidance and mastery expectations;
-- at least one executable notebook under `notebooks/` whose identity uses the canonical module number;
+- at least one executable notebook under `notebooks/` whose filename and metadata use the canonical module number;
 - an `app/` implementation boundary or explicit documented lab boundary;
 - meaningful tests with failure-path coverage;
 - measurable learning outcomes and a mastery gate;
@@ -95,13 +95,15 @@ Every canonical module should expose, directly or through an explicit companion 
 
 Exact notebook structure is governed by [`COLAB-PRACTICE-NOTEBOOK-STANDARD.md`](./COLAB-PRACTICE-NOTEBOOK-STANDARD.md). Course-wide engineering principles are governed by [`COURSE-ENGINEERING-STANDARDS.md`](./COURSE-ENGINEERING-STANDARDS.md).
 
-## Legacy compatibility policy
+## Legacy path policy
 
-The former frontier physical paths and legacy Module 06/30 aliases may exist for historical compatibility. They are **not canonical**. Do not add new learner-facing content or links there. Remove them only after reference migration is verified so useful history is not lost accidentally.
+The former duplicate frontier paths `31-loop-engineering` through `38-frontier-agentic-rag-capstone`, plus the obsolete `30-capstone` alias, have been removed from `main`. They are historical implementation paths only and must not be recreated.
+
+The canonical course now has **one physical directory per module 01–43**. If historical material is needed later, recover it from Git history and merge only the specific content that improves the canonical module.
 
 ## Identity rule
 
-A canonical module's README title, notebook title/metadata, tests and implementation references must agree on its canonical number and name. Historical numbering inside explanatory migration records is acceptable only when clearly labeled as historical.
+A canonical module's README title, notebook filename/metadata, tests and implementation references must agree on its canonical number and name. Historical numbering inside dated migration records is acceptable only when clearly labeled as historical.
 
 ## Certification reminder
 
