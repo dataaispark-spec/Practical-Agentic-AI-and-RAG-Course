@@ -1,45 +1,28 @@
-# 43-Module Upgrade Status — 2026-09-08
+# 43-Module Upgrade Status — Historical Checkpoint
 
-## Canonical curriculum
+**Checkpoint:** 2026-09-08  
+**Canonical curriculum:** 43 modules on `main`  
+**Status:** historical implementation record, not a normative standard
 
-The course is now canonically organized as Modules 1–30 plus a 13-module frontier extension (31–43).
+The canonical governance documents are now [`README.md`](./README.md), [`CANONICAL-43-MODULE-MAP.md`](./CANONICAL-43-MODULE-MAP.md), [`43-MODULE-COMPLETION-MANIFEST.md`](./43-MODULE-COMPLETION-MANIFEST.md), [`COURSE-ENGINEERING-STANDARDS.md`](./COURSE-ENGINEERING-STANDARDS.md), [`COLAB-PRACTICE-NOTEBOOK-STANDARD.md`](./COLAB-PRACTICE-NOTEBOOK-STANDARD.md) and [`MODULE-DEEP-PRACTICE-IMPLEMENTATION-PACK.md`](./MODULE-DEEP-PRACTICE-IMPLEMENTATION-PACK.md).
 
-### New knowledge-engineering sequence
+## What this checkpoint records
 
-31. Knowledge Engineering & Graph RAG
-32. Graph Engineering & Temporal Knowledge
-33. Agentic Knowledge Graph Construction
-34. Graph + Vector Hybrid Retrieval
-35. Karpathy-style Compounding Knowledge / LLM Wiki
+- canonical 43-module curriculum was established;
+- Modules 31–35 were added as the knowledge-engineering / GraphRAG sequence;
+- former frontier material was mapped into canonical Modules 36–43;
+- structural QA and notebook/runtime tooling were expanded to the 43-module model;
+- graph engineering, provenance, temporal knowledge, hybrid retrieval and compounding-knowledge requirements were made explicit;
+- mature implementation assets were preserved rather than deleted merely to change numbering.
 
-### Existing frontier sequence moved in the canonical map
+## Compatibility decision
 
-36. Loop Engineering
-37. Harness Engineering
-38. Long-Running Autonomous Agents
-39. Skills, Memory & Continual Harnesses
-40. Environments, Verifiers & Agentic RL
-41. Recursive Self-Improving Agents
-42. Computer Use & Always-On Teammates
-43. Frontier Graph-RAG Agentic Capstone
+Historical physical paths may exist as compatibility copies while references are migrated. They are not additional curriculum modules. New learner-facing content and links must use canonical paths from `CANONICAL-43-MODULE-MAP.md`.
 
-## Implemented in this upgrade
+## QA evidence policy
 
-- canonical 43-module map;
-- root README updated to the 43-module progression;
-- structural QA checker upgraded from 38 to 43 canonical modules;
-- notebook QA runner upgraded with canonical compatibility mapping;
-- CI matrix upgraded to 43 module-tests and 43 notebook-runtime jobs;
-- Modules 31–35 now have dedicated README, executable app primitive, tests, Colab notebook and 15 exercises;
-- existing mature Modules 31–38 implementation assets preserved and mapped to canonical Modules 36–43;
-- GraphRAG, temporal knowledge, agentic KG construction, hybrid retrieval, provenance, graph security and compounding-knowledge requirements are now explicit.
+A workflow being queued or expected is not evidence of a pass. Certification requires a fresh completed current-revision run across structural QA, required module tests, clean-kernel notebook runtime and aggregate gates, followed by manual semantic review for major content changes.
 
-## Important compatibility decision
+## Current direction
 
-Physical directory renaming is deliberately deferred until all external links and internal references can be migrated atomically. The canonical map is the source of truth during this transition. No mature frontier implementation was deleted merely to change numbering.
-
-## QA execution
-
-A push to the updated CI workflow has been triggered. The workflow now requires structural QA plus module tests plus clean-kernel notebook execution for the canonical 43-module matrix.
-
-A green result must be observed on the current revision before declaring QA complete. Earlier failures remain relevant until the new run demonstrates that they are resolved.
+Use the normative roadmap standards for all future changes. Do not interpret this checkpoint as proof that every module is semantically complete or runtime-certified.
