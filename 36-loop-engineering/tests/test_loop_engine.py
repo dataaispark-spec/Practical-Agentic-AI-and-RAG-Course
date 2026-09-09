@@ -1,24 +1,21 @@
-import importlib.util
-from pathlib import Path
-
-MODULE_PATH = Path(__file__).parents[1] / "app" / "loop_engine.py"
-spec = importlib.util.spec_from_file_location("loop_engine", MODULE_PATH)
-assert spec and spec.loader
-loop_engine = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(loop_engine)
-
-LoopEngine = loop_engine.LoopEngine
-LoopState = loop_engine.LoopState
-Task = loop_engine.Task
-Observation = loop_engine.Observation
-Proposal = loop_engine.Proposal
-Phase = loop_engine.Phase
-stable_action_id = loop_engine.stable_action_id
+from 36_loop_engineering.app.loop_engine import (
+    LoopEngine,
+    LoopState,
+    Observation,
+    Outcome,
+    Phase,
+    Proposal,
+    Task,
+    stable_action_id,
+    stop_if_budget_exhausted,
+)
 
 
-def test_action_id_is_stable():
-    proposal = Proposal("read", {"resource": "x"})
-    assert stable_action_id("t1", proposal) == stable_action_id("t1", proposal)
+def test_action_id_is_stable_and_changes_with_arguments():
+    p1 = Proposal("read", {"resource": "x"})
+    p2 = Proposal("read", {"resource": "y"})
+    assert stable_action_id("t1", p1) == stable_action_id("t1", p1)
+    assert stable_action_id("t1", p1) != stable_action_id("t1", p2)
 
 
 def test_policy_deny_stops_without_actor():
@@ -44,6 +41,7 @@ def test_policy_deny_stops_without_actor():
         LoopState(Task("t1", "tenant-a", "test", max_steps=3))
     )
     assert out.result == "policy_denied"
+    assert out.phase == Phase.ESCALATE
     assert calls["actor"] == 0
 
 
@@ -72,14 +70,51 @@ def test_success_records_verified_action():
     assert out.result == "verified_success"
     assert out.verified is True
     assert len(executed) == 1
+    assert out.phase == Phase.COMPLETE
 
 
-def test_budget_stop_is_deterministic():
-    calls = {"observe": 0}
+def test_budget_stop_is_deterministic_at_limit():
+    state = LoopState(
+        Task("t3", "tenant-a", "loop", max_steps=2, max_repeated_states=99),
+        step=2,
+    )
+    # The engine treats the configured maximum as a hard boundary before starting another iteration.
+    assert stop_if_budget_exhausted(state) is None
+    state.step = 3
+    assert stop_if_budget_exhausted(state) == "max_steps"
+
+
+def test_stale_observation_recovers_then_succeeds():
+    observations = iter([
+        Observation("stale", "fake", {}, 1, fresh=False),
+        Observation("fresh", "fake", {"ready": True}, 2, fresh=True),
+    ])
 
     def observer(state):
-        calls["observe"] += 1
-        return Observation(f"o{calls['observe']}", "fake", {}, state.state_version + 1)
+        return next(observations)
+
+    def decider(state, obs):
+        return Proposal("read", {"resource": "r"})
+
+    def policy(state, proposal):
+        return True, "allowed"
+
+    def actor(state, proposal, action_id):
+        return {"status": "ok"}
+
+    def verifier(state, proposal, result):
+        return result["status"] == "ok"
+
+    out = LoopEngine(observer, decider, policy, actor, verifier).run(
+        LoopState(Task("t4", "tenant-a", "recover", max_steps=4))
+    )
+    assert out.result == "verified_success"
+    assert any(e.phase == Phase.RECOVER for e in out.trace)
+
+
+def test_repeated_verification_failure_escalates():
+    def observer(state):
+        return Observation(f"o{state.step}", "fake", {"ready": True}, state.state_version + 1)
 
     def decider(state, obs):
         return Proposal("noop", {})
@@ -93,9 +128,38 @@ def test_budget_stop_is_deterministic():
     def verifier(state, proposal, result):
         return False
 
-    out = LoopEngine(observer, decider, policy, actor, verifier).run(
-        LoopState(Task("t3", "tenant-a", "loop", max_steps=2, max_repeated_states=99))
+    def recover(state, reason):
+        return Outcome.ESCALATE
+
+    out = LoopEngine(observer, decider, policy, actor, verifier, recover=recover).run(
+        LoopState(Task("t5", "tenant-a", "verify", max_steps=5))
     )
-    assert out.phase == Phase.STOP
-    assert out.result == "safe_stop"
-    assert out.stop_reason == "max_steps"
+    assert out.phase == Phase.ESCALATE
+    assert out.result == "human_escalation"
+
+
+def test_duplicate_action_is_not_executed_twice():
+    executed = []
+
+    def observer(state):
+        return Observation(f"o{state.step}", "fake", {"ready": True}, state.state_version + 1)
+
+    def decider(state, obs):
+        return Proposal("read", {"resource": "r"})
+
+    def policy(state, proposal):
+        return True, "allowed"
+
+    def actor(state, proposal, action_id):
+        executed.append(action_id)
+        return {"status": "ok"}
+
+    def verifier(state, proposal, result):
+        return True
+
+    state = LoopState(Task("t6", "tenant-a", "dedupe", max_steps=1))
+    action_id = stable_action_id(state.task.task_id, Proposal("read", {"resource": "r"}))
+    state.completed_action_ids.add(action_id)
+    out = LoopEngine(observer, decider, policy, actor, verifier).run(state)
+    assert out.result == "verified_success"
+    assert executed == []
