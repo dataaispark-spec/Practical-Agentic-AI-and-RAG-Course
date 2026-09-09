@@ -1,9 +1,10 @@
 # 43-Module Completion Manifest
 
-Refresh checkpoint: **2026-09-09**  
-Branch: **main**
+**Status:** normative completion contract  
+**Refresh checkpoint:** 2026-09-09  
+**Canonical branch:** `main`
 
-This is the visible completion contract for the canonical 43-module course. The numbered directories on `main` are authoritative; historical frontier directories are compatibility copies only.
+This manifest defines the evidence required to call the canonical 43-module course complete. The canonical numbered directories on `main` are authoritative. Historical compatibility copies are not additional modules.
 
 ## Canonical sequence
 
@@ -39,7 +40,7 @@ This is the visible completion contract for the canonical 43-module course. The 
 29. Deployment + CI/CD
 30. Enterprise Agentic RAG Capstone
 
-### Knowledge Engineering & Graph track — Modules 31–35
+### Knowledge engineering & graph — Modules 31–35
 31. Knowledge Engineering & Graph RAG
 32. Graph Engineering & Temporal Knowledge
 33. Agentic Knowledge Graph Construction
@@ -58,7 +59,7 @@ This is the visible completion contract for the canonical 43-module course. The 
 
 ## Canonical implementation mapping
 
-Modules **01–43 have canonical numbered directories on `main`**:
+The source-of-truth paths are:
 
 `01-ai-systems-thinking/` through `30-enterprise-agentic-rag-capstone/`, followed by:
 
@@ -76,31 +77,61 @@ Modules **01–43 have canonical numbered directories on `main`**:
 - `42-computer-use-always-on-ai-teammates/`
 - `43-frontier-graph-rag-agentic-capstone/`
 
-The former `31-loop-engineering/` through `38-frontier-agentic-rag-capstone/` paths remain only as legacy compatibility copies and must not be used for new canonical links.
+Historical paths, including former `31-loop-engineering` through `38-frontier-agentic-rag-capstone` directories and legacy Module 06/30 aliases, must not receive new canonical links or learning content.
 
-## Completion contract
+## Module completion contract
 
-Each canonical module is expected to expose:
+Every canonical module must provide evidence for:
 
-`Learning objectives → README theory → architecture → app/lab → executable Colab → exercises → tests → failure/debugging → metrics/evaluation → security → mastery gate`
+```text
+Learning objectives
+→ README theory / mechanism
+→ architecture + data/control flow
+→ runnable implementation / lab
+→ executable Colab practice
+→ guided + independent exercises
+→ intentional failure / debugging
+→ measurable evaluation
+→ security / misuse handling where applicable
+→ tests / assertions
+→ production trade-offs
+→ interview + system-design preparation
+→ mastery gate
+→ AegisAI + next-module bridge
+```
 
-The notebook learning contract is:
+A module is not complete merely because the files exist. Reviewers must be able to locate learner-visible evidence for the material above.
 
-`Predict → Build → Try → Break → Debug → Measure → Improve → Defend`
+## Notebook completion contract
 
-Equivalent section names are acceptable when the executable behavior is present.
+Canonical notebooks follow:
 
-## QA certification contract
+`Predict → Build → Try → Observe → Break → Debug → Measure → Improve → Defend`
 
-The repository is **not QA-certified** until the current GitHub Actions workflow passes all of:
+The exact notebook requirements are maintained in [`COLAB-PRACTICE-NOTEBOOK-STANDARD.md`](./COLAB-PRACTICE-NOTEBOOK-STANDARD.md).
+
+## Security completion contract
+
+Relevant modules must cover the appropriate boundaries among identity, tenant, data, memory, tools/MCP, policy, approval, budget, state, verification and audit. Untrusted model/data output must not become authority merely because it is persuasive.
+
+## Evaluation completion contract
+
+Where applicable, learners must measure multiple dimensions such as correctness/quality, retrieval/grounding, safety, reliability, latency and cost. They must interpret trade-offs and preserve meaningful regression evidence.
+
+## Certification contract
+
+Course certification requires all of the following to pass on the current revision:
 
 1. structural 43-module QA;
-2. module-test matrix;
-3. clean-kernel notebook-runtime matrix;
-4. aggregate gate.
+2. required module-test jobs;
+3. clean-kernel notebook-runtime checks;
+4. aggregate CI gate;
+5. manual semantic review of material content changes and identity drift.
 
-A queued, running, or partially successful workflow is **not** a pass.
+A queued, running, partial, stale or merely expected workflow is not a pass.
 
-## Audit principle
+## Quality gate
 
-Automated QA proves structural/runtime invariants. Major curriculum changes additionally require manual semantic review of theory, architecture, lab realism, exercise progression, failure coverage, measurement, security and capstone integration.
+The course should be called **complete** only when it functions as a coherent progressive apprenticeship. Adding files, increasing word counts or making CI less strict does not constitute completion.
+
+See [`COURSE-ENGINEERING-STANDARDS.md`](./COURSE-ENGINEERING-STANDARDS.md) for the authoritative best-practices rules.
