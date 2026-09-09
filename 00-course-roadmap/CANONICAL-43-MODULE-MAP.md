@@ -1,9 +1,12 @@
 # Canonical 43-Module Course Map
 
-**Authoritative branch:** `main`  
+**Authority:** normative source of truth for module identity and canonical paths  
+**Branch:** `main`  
 **Last audited:** 2026-09-09
 
-The numbered directory below is the source of truth for each module. Historical directories retained for compatibility are explicitly non-canonical.
+All learner-facing links, CI paths, notebook identities and implementation references should use this map. Historical compatibility copies are not additional curriculum modules.
+
+## Core — Modules 01–30
 
 | # | Canonical directory | Primary focus |
 |---:|---|---|
@@ -37,11 +40,21 @@ The numbered directory below is the source of truth for each module. Historical 
 | 28 | `28-responsible-ai-governance` | responsible AI + governance |
 | 29 | `29-deployment-cicd` | deployment + CI/CD |
 | 30 | `30-enterprise-agentic-rag-capstone` | first integrated enterprise capstone |
+
+## Knowledge engineering & graph — Modules 31–35
+
+| # | Canonical directory | Primary focus |
+|---:|---|---|
 | 31 | `31-knowledge-engineering-graph-rag` | knowledge engineering + GraphRAG |
 | 32 | `32-graph-engineering-temporal-knowledge` | graph engineering + temporal knowledge |
 | 33 | `33-agentic-knowledge-graph-construction` | agentic KG construction |
 | 34 | `34-graph-vector-hybrid-retrieval` | graph + vector hybrid retrieval |
 | 35 | `35-compounding-knowledge-llm-wiki` | compounding knowledge / LLM wiki |
+
+## Frontier agent engineering — Modules 36–43
+
+| # | Canonical directory | Primary focus |
+|---:|---|---|
 | 36 | `36-loop-engineering` | production agent loop engineering |
 | 37 | `37-harness-engineering` | agent harness engineering |
 | 38 | `38-long-running-autonomous-agents` | durable long-running autonomy |
@@ -51,31 +64,45 @@ The numbered directory below is the source of truth for each module. Historical 
 | 42 | `42-computer-use-always-on-ai-teammates` | computer use + always-on teammates |
 | 43 | `43-frontier-graph-rag-agentic-capstone` | frontier Graph-RAG agentic capstone |
 
-## Compatibility aliases
+## Curriculum progression
 
-The former frontier directories `31-loop-engineering` through `38-frontier-agentic-rag-capstone` are retained only as historical compatibility copies. They must not be treated as authoritative implementations for canonical numbering.
+```text
+01–05  Foundations
+  ↓
+06–12  RAG engineering
+  ↓
+13–18  Tools / loops / memory / state / planning / security
+  ↓
+19–24  Multi-agent / MCP
+  ↓
+25–30  Production engineering + first AegisAI capstone
+  ↓
+31–35  Knowledge / graph engineering
+  ↓
+36–43  Frontier loop / harness / durability / continual learning / verifiers / self-improvement / computer use / final capstone
+```
 
-The former `06-rag-first-principles` and `30-capstone` paths are also legacy aliases. Canonical references, CI, notebooks and learner links must use the directories in the table above.
+## Canonical artifact expectations
 
-## Canonical artifact contract
+Every canonical module should expose, directly or through an explicit companion boundary:
 
-Every canonical module must expose:
+- `README.md` with module identity, theory/mechanism, architecture, exercises, failure/security guidance and mastery expectations;
+- at least one executable notebook under `notebooks/` whose identity uses the canonical module number;
+- an `app/` implementation boundary or explicit documented lab boundary;
+- meaningful tests with failure-path coverage;
+- measurable learning outcomes and a mastery gate;
+- prerequisite/successor and AegisAI links.
 
-- `README.md` with module identity, mission/theory, learning outcomes or mastery gate, architecture/trade-offs, labs/exercises and security/failure guidance;
-- `notebooks/` with at least one executable Colab notebook whose title/metadata uses the canonical module number;
-- `app/` as the implementation boundary (direct code or an explicit lab-boundary adapter/documentation when the executable reference lives under `labs/`);
-- `tests/` with meaningful assertions and failure-path coverage;
-- measurable outcomes and a mastery gate;
-- explicit dependency linkage to adjacent modules and AegisAI.
+Exact notebook structure is governed by [`COLAB-PRACTICE-NOTEBOOK-STANDARD.md`](./COLAB-PRACTICE-NOTEBOOK-STANDARD.md). Course-wide engineering principles are governed by [`COURSE-ENGINEERING-STANDARDS.md`](./COURSE-ENGINEERING-STANDARDS.md).
 
-## Notebook learning contract
+## Legacy compatibility policy
 
-Every canonical notebook should demonstrate:
+The former frontier physical paths and legacy Module 06/30 aliases may exist for historical compatibility. They are **not canonical**. Do not add new learner-facing content or links there. Remove them only after reference migration is verified so useful history is not lost accidentally.
 
-`Predict → Build → Try → Break → Debug → Measure → Improve → Defend`
+## Identity rule
 
-Equivalent section names are acceptable, but the behavior must be present rather than merely asserted.
+A canonical module's README title, notebook title/metadata, tests and implementation references must agree on its canonical number and name. Historical numbering inside explanatory migration records is acceptable only when clearly labeled as historical.
 
-## Certification
+## Certification reminder
 
-Canonical structure, module tests and notebook runtime must all pass before the course is considered QA-certified. Manual semantic review remains required for major curriculum changes.
+Canonical structure is necessary but not sufficient for course quality. Structural QA, module tests, clean-kernel notebook runtime and aggregate CI must be complemented by manual semantic review before the course is called certified.
