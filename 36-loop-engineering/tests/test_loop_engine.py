@@ -1,4 +1,19 @@
-from 36_loop_engineering.app.loop_engine import *
+import importlib.util
+from pathlib import Path
+
+MODULE_PATH = Path(__file__).parents[1] / "app" / "loop_engine.py"
+spec = importlib.util.spec_from_file_location("loop_engine", MODULE_PATH)
+assert spec and spec.loader
+loop_engine = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(loop_engine)
+
+LoopEngine = loop_engine.LoopEngine
+LoopState = loop_engine.LoopState
+Task = loop_engine.Task
+Observation = loop_engine.Observation
+Proposal = loop_engine.Proposal
+Phase = loop_engine.Phase
+stable_action_id = loop_engine.stable_action_id
 
 
 def test_action_id_is_stable():
@@ -25,8 +40,9 @@ def test_policy_deny_stops_without_actor():
     def verifier(state, proposal, result):
         return True
 
-    engine = LoopEngine(observer, decider, policy, actor, verifier)
-    out = engine.run(LoopState(Task("t1", "tenant-a", "test", max_steps=3)))
+    out = LoopEngine(observer, decider, policy, actor, verifier).run(
+        LoopState(Task("t1", "tenant-a", "test", max_steps=3))
+    )
     assert out.result == "policy_denied"
     assert calls["actor"] == 0
 
