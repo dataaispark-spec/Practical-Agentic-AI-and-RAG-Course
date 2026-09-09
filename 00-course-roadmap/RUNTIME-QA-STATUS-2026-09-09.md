@@ -1,37 +1,49 @@
 # Runtime QA Status — 2026-09-09
 
+**Status:** historical verification checkpoint; not a certification claim.  
+**Canonical branch:** `main`
+
 ## Audit scope
 
-This checkpoint covers the canonical 43-module course on `main`, with emphasis on executable completeness, test coverage, notebook execution, canonical path resolution, Python syntax, and CI queue behavior.
+This checkpoint records changes made to improve executable completeness, test coverage, notebook execution, canonical path resolution, Python syntax checks and CI behavior for the 43-module course.
 
-## Fixes applied in this audit
+## Fixes recorded at this checkpoint
 
-1. **CI execution coverage expanded from Modules 04–43 to Modules 01–43.** Modules 01–03 now participate in both module-test and notebook-runtime validation.
-2. **Matrix queue pressure removed.** The large 43×2 job matrix was replaced by three deterministic jobs: structural QA, sequential all-module tests, and sequential all-module notebook runtime. This avoids dozens of independently queued runner jobs while still exercising every module.
-3. **All-module tests now continue across failures.** The test job records every failing module and exits non-zero only after all 43 suites have been attempted.
-4. **Notebook QA now fails closed.** Missing notebook directories or zero notebooks are explicit failures instead of silently producing `0/0 passed` success.
-5. **Repository-wide Python syntax compilation was added** before structural QA.
-6. **Canonical notebook resolution was expanded** for Modules 01–03, 06, and 31–43, eliminating accidental selection of legacy directories.
-7. **The workflow path map was re-audited** after an intermediate Module 33 path typo and corrected before treating the new revision as valid.
+1. CI execution coverage was expanded to Modules 01–43.
+2. The large matrix was simplified into deterministic structural, all-module test and all-module notebook-runtime jobs to reduce queue pressure while still attempting every module.
+3. Test execution was designed to continue across module failures and fail only after all attempted results are collected.
+4. Notebook QA was changed to fail closed when required notebook directories or notebooks are missing.
+5. Repository-wide Python syntax compilation was added before structural QA.
+6. Canonical notebook resolution was expanded to avoid accidentally selecting legacy paths.
+7. Workflow path resolution was re-audited after path corrections.
 
-## Current runtime evidence
+## Evidence policy
 
-The latest revision is commit `a3b8f8df7187a74ad9c777fcfae121c69d55088d`. Its new Course QA run is `34278728488`. At this checkpoint the three jobs are still **queued**, so there is deliberately no claim of green runtime completion yet.
+A queued, running, expected or historical workflow is **not** a pass. Runtime certification requires completed evidence for the current revision. This document intentionally does not turn an earlier queued run into a success claim.
 
-The earlier runs were also queued and therefore cannot be treated as failure or success evidence. The correct next action is to inspect the completed logs of the current three jobs, fix any concrete failures, and rerun until the aggregate gate is green.
+## Static cleanup noted
 
-## Static findings still worth cleaning
-
-Canonical frontier directories 36–38 and 40–43 contain notebooks whose historical filenames still use the earlier 31–38 numbering, and some include legacy extension notebooks. The canonical README identities and directory mapping are authoritative, but the notebook filenames/metadata should be normalized in a subsequent cleanup so learner-facing Colab artifacts are unambiguous.
+Some dated historical records may mention earlier numbering or implementation checkpoints. These remain for audit traceability and should not override the canonical 43-module map or current engineering standards.
 
 ## Certification rule
 
-Do not mark the 43-module course runtime-complete until all of the following are green on the same revision:
+Do not call the course runtime-complete until the same revision has green evidence for:
 
-- repository-wide Python compilation
-- structural QA 43/43
-- all 43 module test suites
-- all 43 module notebook executions
-- final aggregate QA gate
+- repository-wide Python compilation;
+- structural QA for all 43 modules;
+- all required module test suites;
+- all 43 notebook executions in a clean kernel;
+- final aggregate QA gate.
 
-Even after runtime green, manual semantic review remains required for pedagogical depth, failure-injection quality, measurement quality, reference solutions, industry realism, and mastery-gate quality.
+Even after runtime green, manual semantic review remains required for pedagogical depth, failure quality, measurement quality, reference solutions, industry realism and mastery gates.
+
+## Canonical governance
+
+For current requirements use:
+
+- `README.md`
+- `CANONICAL-43-MODULE-MAP.md`
+- `43-MODULE-COMPLETION-MANIFEST.md`
+- `COURSE-ENGINEERING-STANDARDS.md`
+- `COLAB-PRACTICE-NOTEBOOK-STANDARD.md`
+- `MODULE-DEEP-PRACTICE-IMPLEMENTATION-PACK.md`
