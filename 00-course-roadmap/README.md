@@ -32,7 +32,7 @@ This directory is the course's **governance layer**. It defines what is canonica
 1. **`main` is canonical.** New learner links, CI paths, notebooks and implementation references must target canonical paths on `main`.
 2. **The 43-module map wins.** Older 38-module documents are historical/supporting material unless explicitly updated and relabeled.
 3. **Module directories are authoritative.** README identity, notebook identity, application boundaries and tests must match the canonical module number.
-4. **Legacy copies are not second modules.** Compatibility directories may remain temporarily, but no new learning content should be added there.
+4. **There is one physical canonical directory per module.** The former duplicate frontier paths and obsolete Module 30 alias have been removed from `main`; do not recreate them. Recover historical material from Git history only when a specific artifact needs to be merged into its canonical module.
 5. **Evidence beats claims.** File presence is not proof of pedagogical quality; notebook execution is not proof of semantic completeness; green structural QA is not proof of production readiness.
 6. **No padding.** Do not inflate README/notebook length with repetitive prose, generic definitions, duplicated framework explanations or empty sections. Add depth only when it improves understanding, implementation, debugging, measurement or design judgment.
 7. **Framework second, mechanism first.** Learners should see the underlying control/data/state mechanism before framework-specific abstractions.
