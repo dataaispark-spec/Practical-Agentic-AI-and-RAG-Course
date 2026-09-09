@@ -1,14 +1,15 @@
-from 36_loop_engineering.app.loop_engine import (
-    LoopEngine,
-    LoopState,
-    Observation,
-    Outcome,
-    Phase,
-    Proposal,
-    Task,
-    stable_action_id,
-    stop_if_budget_exhausted,
-)
+from importlib import import_module
+
+m = import_module("36-loop-engineering.app.loop_engine")
+LoopEngine = m.LoopEngine
+LoopState = m.LoopState
+Observation = m.Observation
+Outcome = m.Outcome
+Phase = m.Phase
+Proposal = m.Proposal
+Task = m.Task
+stable_action_id = m.stable_action_id
+stop_if_budget_exhausted = m.stop_if_budget_exhausted
 
 
 def test_action_id_is_stable_and_changes_with_arguments():
@@ -73,12 +74,11 @@ def test_success_records_verified_action():
     assert out.phase == Phase.COMPLETE
 
 
-def test_budget_stop_is_deterministic_at_limit():
+def test_budget_boundary_is_deterministic():
     state = LoopState(
         Task("t3", "tenant-a", "loop", max_steps=2, max_repeated_states=99),
         step=2,
     )
-    # The engine treats the configured maximum as a hard boundary before starting another iteration.
     assert stop_if_budget_exhausted(state) is None
     state.step = 3
     assert stop_if_budget_exhausted(state) == "max_steps"
