@@ -1,93 +1,24 @@
 # Frontier Agent Engineering Track
 
-## Purpose
+**Scope:** Modules 36–43  
+**Status:** normative subject-matter guidance  
+**Canonical branch:** `main`  
+**Updated:** 2026-09-09
 
-This track extends the IITM-aligned core curriculum into the 2026 frontier of production agent engineering. It is not a collection of product tutorials. It teaches the underlying engineering ideas that recur across agent systems: **loop engineering, harness engineering, durable state, skills, environments, verifiers, computer use, continual improvement, and agentic reinforcement learning**.
+This track extends the production Agentic RAG foundation into frontier agent engineering. It is **not** a collection of product tutorials. It teaches reusable mechanisms: loop engineering, harnesses, durable state, skills, environments, verifiers, continual improvement, computer use and agentic reinforcement learning.
 
-The core rule is:
+For course-wide rules, see [`COURSE-ENGINEERING-STANDARDS.md`](./COURSE-ENGINEERING-STANDARDS.md).
 
-> A capable model is only one component. The production system is the model plus its harness, environment, policies, state, tools, verification and evaluation loops.
+## Frontier mental model
 
-## Why this track exists
-
-Current agent systems increasingly behave like persistent workers rather than chat sessions. Hermes Agent exposes persistent memory, skills, Bot Mode, MCP, scheduled tasks, delegation and programmatic tool calling. Grok Bot is designed around persistent AI teammates with their own computers, applications, memory, autonomous work and approval boundaries. Prime Agent introduces a self-improving coding harness built around Recursive Language Models and a Continual Harness. These systems demonstrate a shift from **prompting a model** toward **engineering an operating environment for an agent**.
-
-These are case studies, not dependencies. Learners implement the principles themselves before studying frameworks/products.
-
-## Revised 2026 course architecture
-
-### Core 30-module foundation
-
-1. AI Systems Thinking & Architecture Decisions
-2. Python for AI Engineering
-3. FastAPI + Testing
-4. LLM Application Foundations
-5. Prompting + Evaluation
-6. RAG From First Principles
-7. Embeddings + Vector Databases
-8. Document Intelligence + PII
-9. Advanced Retrieval
-10. RAG Optimization
-11. RAG Evaluation
-12. RAG Debugging
-13. Tool Calling + API Agents
-14. Raw Agent Loop
-15. Memory
-16. Stateful Agent Workflows
-17. Planning + Human-in-the-Loop
-18. Agent Security
-19. Single vs Multi-Agent Decision Science
-20. Multi-Agent Architectures
-21. Coordination + Fault Tolerance
-22. Multi-Agent Debugging
-23. MCP Fundamentals
-24. Enterprise MCP Server
-25. Observability
-26. Production Evaluation + Regression
-27. Cost Engineering
-28. Responsible AI + Security
-29. Deployment + CI/CD
-30. Enterprise Agentic RAG Capstone
-
-### Frontier extension
-
-31. **Loop Engineering** — Production Agent Loop Engine
-32. **Harness Engineering** — AegisAI Agent Harness
-33. **Long-Running Autonomous Agents** — Durable Autonomous Worker
-34. **Skills, Memory & Continual Harnesses** — Self-Improving AegisAI
-35. **Environments, Verifiers & Agentic RL** — Agent Training Environment
-36. **Recursive / Self-Improving Agents** — Research Agent Harness
-37. **Computer Use & Always-On AI Teammates** — Enterprise Digital Worker
-38. **Frontier Agentic RAG Capstone** — AegisAI Autonomous Enterprise Platform
-
-## Cross-cutting engineering spine
-
-Every module after Module 12 should explicitly answer:
-
-| Control dimension | Required question |
-|---|---|
-| Goal | What constitutes successful completion? |
-| Loop | Who controls the next step: code, model, scheduler, or human? |
-| State | What state exists and what survives a restart? |
-| Tools | What can the agent access? |
-| Policy | What actions are forbidden or approval-gated? |
-| Budget | What are time, token, tool-call and monetary limits? |
-| Verification | How do we know the result is correct? |
-| Recovery | Can the system resume after partial failure? |
-| Evaluation | Can two versions be compared objectively? |
-| Improvement | What evidence can change future behavior? |
-| Security | Can the agent cross its intended trust boundary? |
-| Audit | Can the complete decision/action history be reconstructed? |
-
-## New mental model
+> **Production agent = model + harness + environment + tools + state + policy + verification + evaluation.**
 
 ```text
                     MODEL
                       |
                       v
              +----------------+
-             |   HARNESS      |
-             |                |
+             |     HARNESS    |
              | loop / state   |
              | tools / skills |
              | policy / budget|
@@ -95,101 +26,134 @@ Every module after Module 12 should explicitly answer:
                      |
                      v
                 ENVIRONMENT
-                     |
-              +------+------+
-              |             |
-              v             v
-           ACTION        OBSERVATION
-              |             |
-              +------+------+
-                     |
-                     v
-                 VERIFIER
-                     |
-                     v
-                 EVALUATOR
-                     |
-             +-------+-------+
-             |               |
-          deploy          improve
-             |               |
-             +-------+-------+
-                     |
-                     v
-                NEXT TRAJECTORY
+                /          \
+          OBSERVATION     ACTION
+                \          /
+                 v        v
+                   VERIFIER
+                       |
+                       v
+                   EVALUATOR
+                   /       \
+              DEPLOY     IMPROVE
+                   \       /
+                    v     v
+                  NEXT TRAJECTORY
 ```
 
-## Frontier engineering principles
+The model may propose. The harness and environment enforce what can actually happen.
 
-### 1. Framework second, mechanism first
+## Module progression
 
-Learners must implement a minimal mechanism before relying on LangGraph, AutoGen, Crew-style abstractions, MCP frameworks or product-specific runtimes. Frameworks are then compared against the handwritten baseline.
+| Module | Focus | New systems constraint |
+|---:|---|---|
+| 36 | Loop Engineering | explicit loop ownership, halting, recovery and trajectory control |
+| 37 | Harness Engineering | reusable control plane around models, tools, state and policy |
+| 38 | Long-Running Autonomous Agents | durable execution, leases, checkpoints, waiting and resume |
+| 39 | Skills, Memory & Continual Harnesses | trusted skill promotion, persistent memory and behavioral evolution |
+| 40 | Environments, Verifiers & Agentic RL | explicit tasks, environment contracts, deterministic verification and reward design |
+| 41 | Recursive Self-Improving Agents | controlled improvement proposals, experiments, gates and rollback |
+| 42 | Computer Use & Always-On AI Teammates | grounded UI actions, stale state, approval and persistent scheduling |
+| 43 | Frontier Graph-RAG Agentic Capstone | integrated governed autonomous enterprise system |
 
-### 2. Deterministic control around probabilistic decisions
+## Cross-cutting control questions
 
-The model may propose. The runtime should enforce:
+Every frontier module should answer:
 
-- schemas
-- authorization
-- resource budgets
-- deadlines
-- tool allowlists
-- state transitions
-- approval requirements
-- termination conditions
-- audit records
+| Dimension | Engineering question |
+|---|---|
+| Goal | What counts as successful completion? |
+| Loop | Who owns the next transition? |
+| State | What survives restart, and what is authoritative? |
+| Tools | What capabilities are exposed? |
+| Policy | What can never be done or requires approval? |
+| Budget | What limits apply to time, context, steps, tools and money? |
+| Verification | What independently proves correctness? |
+| Recovery | What happens after partial failure? |
+| Evaluation | How are versions compared? |
+| Improvement | What evidence permits promotion? |
+| Security | Which trust boundary could be crossed? |
+| Audit | Can the trajectory and side effects be reconstructed? |
 
-### 3. Verification is a first-class component
+## Frontier principles
 
-An agent that can act without a meaningful success signal is not an engineered autonomous system; it is an uncontrolled loop.
+### Mechanism before product
 
-### 4. Persistence changes the threat model
+Case studies from current agent products/research are useful only when learners extract the underlying primitive and implement a minimal version independently.
 
-A persistent agent can accumulate memory, permissions, credentials, artifacts, scheduled work and behavioral drift. Long-running systems therefore require lifecycle controls, not merely conversation history.
+### Deterministic controls remain outside the model
 
-### 5. Self-improvement requires gates
+Schemas, authorization, budgets, deadlines, state transitions, approvals, termination and audit should be enforceable without trusting the model to follow a textual instruction.
 
-Any agent that can modify its prompts, skills, memory, tools, sub-agents or policies must pass evaluation and rollback gates. The ability to change itself is not evidence that the change is beneficial.
+### Verification is a first-class subsystem
 
-## Frontier case-study matrix
+Autonomy without a meaningful success signal is not robust autonomy. Verification should be task-specific and independent when practical.
 
-| System / idea | Course concept | What learners extract |
-|---|---|---|
-| Hermes Agent | skills, memory, delegation, Bot Mode, MCP, scheduled work | durable agent architecture and progressive capability loading |
-| Grok Bot | persistent computer, always-on work, app access, approval | long-running worker and human delegation model |
-| Prime Agent | Recursive Language Model, Continual Harness | self-improving harness and programmatic orchestration |
-| Agentic RL systems | environments, rollouts, verifiers, rewards | engineering the improvement loop |
+### Persistence changes the threat model
 
-Do not teach these as magic products. Ask: **what primitive is underneath the product?**
+A long-lived worker can accumulate memory, permissions, credentials, artifacts, schedules and behavioral drift. Lifecycle controls must therefore cover revocation, expiry, provenance, rollback and recovery.
 
-## Mastery standard for the frontier track
+### Self-improvement requires promotion gates
 
-A learner should be able to:
+Changing prompts, skills, tools, memory, models or policies is a change to system behavior. The candidate must be evaluated against a baseline and held-out/regression cases before promotion. Always retain a rollback path.
 
-1. Build an agent loop without a framework.
-2. Turn it into a durable harness.
-3. Add persistent state safely.
-4. Add skills with progressive disclosure.
-5. Add sub-agent delegation with budgets.
-6. Add MCP with least-privilege tool exposure.
-7. Run work asynchronously for hours or days.
-8. Resume after process failure.
-9. Verify task completion independently of the agent's self-report.
-10. Construct an environment and measurable verifier.
-11. Generate and inspect trajectories.
-12. Explain when prompting, workflow engineering, harness engineering, SFT or RL is the appropriate lever.
-13. Detect reward hacking.
-14. Roll back a harmful self-improvement.
-15. Design a secure always-on enterprise agent.
+### Reward is not truth
 
-## Research policy
+Agentic RL introduces the risk of reward hacking, evaluator gaming, specification gaming and distribution shift. Reward design, verifier design and held-out evaluation must be taught separately.
 
-Because this area changes unusually quickly, the course maintains a research log. Every frontier chapter should distinguish:
+## Frontier security labs
 
-- stable engineering principles
-- current framework/product behavior
-- experimental research claims
-- benchmark claims from vendors or labs
-- learner-generated measurements
+Relevant failure injections include:
 
-Product features must be rechecked against current official documentation before a lab is run. Benchmark numbers should never be presented as universal truth without their evaluation setup.
+- infinite loops and oscillation;
+- retry storms and budget bypass;
+- stale checkpoints and duplicated effects;
+- malicious skill/memory/graph updates;
+- capability escalation through delegation;
+- forged/stale approvals;
+- prompt/document/tool poisoning;
+- stale computer-use screenshots/DOM state;
+- unintended credential exposure or egress;
+- verifier blind spots and reward hacking;
+- self-improvement evaluator gaming.
+
+A useful failure record is:
+
+```text
+setup
+→ injected fault
+→ expected symptom
+→ violated invariant
+→ diagnosis
+→ recovery
+→ regression test
+```
+
+## Research/product fact policy
+
+Because frontier systems change quickly, module material must distinguish:
+
+1. stable engineering principles;
+2. current product/framework behavior;
+3. experimental research claims;
+4. vendor/lab benchmark claims;
+5. learner-generated measurements.
+
+Current product features and benchmark numbers must be checked against authoritative current sources before being presented as current facts. Benchmark results must include their evaluation setup and limitations.
+
+## Mastery standard
+
+A learner completing the frontier track should be able to:
+
+1. build a framework-free bounded agent loop;
+2. wrap it in a governed harness;
+3. persist and recover state safely;
+4. introduce skills and memory with trust gates;
+5. delegate work under capability and budget constraints;
+6. execute asynchronously for long periods with leases/checkpoints;
+7. verify outcomes independently;
+8. construct environment tasks and deterministic verifiers;
+9. inspect trajectories and diagnose reward/verification failures;
+10. run controlled self-improvement with evaluation and rollback;
+11. ground computer-use actions against current environment state;
+12. design the integrated frontier AegisAI system under security, reliability, cost and audit constraints.
