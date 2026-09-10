@@ -2,7 +2,7 @@
 
 **Authority:** normative source of truth for module identity and canonical paths  
 **Branch:** `main`  
-**Last audited:** 2026-09-09
+**Last audited:** 2026-09-10
 
 All learner-facing links, CI paths, notebook identities and implementation references should use this map. Historical compatibility copies are not additional curriculum modules.
 
@@ -43,13 +43,13 @@ All learner-facing links, CI paths, notebook identities and implementation refer
 
 ## Knowledge engineering & graph — Modules 31–35
 
-| # | Canonical directory | Primary focus |
-|---:|---|---|
-| 31 | `31-knowledge-engineering-graph-rag` | knowledge engineering + GraphRAG |
-| 32 | `32-graph-engineering-temporal-knowledge` | graph engineering + temporal knowledge |
-| 33 | `33-agentic-knowledge-graph-construction` | agentic KG construction |
-| 34 | `34-graph-vector-hybrid-retrieval` | graph + vector hybrid retrieval |
-| 35 | `35-compounding-knowledge-llm-wiki` | compounding knowledge / LLM wiki |
+| # | Canonical directory | Primary focus | Build / engineering outcome |
+|---:|---|---|---|
+| 31 | `31-knowledge-engineering-graph-rag` | knowledge engineering + GraphRAG | ontology, entities, claims, provenance, bounded traversal, graph/vector comparison |
+| 32 | `32-graph-engineering-temporal-knowledge` | graph engineering + temporal knowledge | temporal validity, bitemporal thinking, supersession, contradiction, schema evolution |
+| 33 | `33-agentic-knowledge-graph-construction` | agentic KG construction | governed extraction, resolution, validation, approval, idempotent commit, rollback |
+| 34 | `34-graph-vector-hybrid-retrieval` | graph + vector hybrid retrieval | vector/graph baselines, RRF, reranking, multi-hop benchmark, retrieval economics |
+| 35 | `35-compounding-knowledge-llm-wiki` | compounding knowledge / LLM wiki | evidence-backed claims, durable pages, contradiction, rollback and context compilation |
 
 ## Frontier agent engineering — Modules 36–43
 
@@ -79,32 +79,31 @@ All learner-facing links, CI paths, notebook identities and implementation refer
   ↓
 31–35  Knowledge / graph engineering
   ↓
-36–43  Frontier loop / harness / durability / continual learning / verifiers / self-improvement / computer use / final capstone
+36–43  Loop / harness / autonomy / continual improvement / frontier agents
 ```
 
-## Canonical artifact expectations
+## Module 31–35 dependency contract
 
-Every canonical module should expose, directly or through an explicit companion boundary:
+```text
+M30 AegisAI capstone
+        |
+        v
+M31 explicit knowledge + GraphRAG
+        |
+        v
+M32 temporal/versioned graph correctness
+        |
+        v
+M33 governed agentic graph construction
+        |
+        v
+M34 graph + vector retrieval economics
+        |
+        v
+M35 compounding knowledge / maintained wiki
+        |
+        v
+M36 deterministic execution loop
+```
 
-- `README.md` with module identity, theory/mechanism, architecture, exercises, failure/security guidance and mastery expectations;
-- at least one executable notebook under `notebooks/` whose filename and metadata use the canonical module number;
-- an `app/` implementation boundary or explicit documented lab boundary;
-- meaningful tests with failure-path coverage;
-- measurable learning outcomes and a mastery gate;
-- prerequisite/successor and AegisAI links.
-
-Exact notebook structure is governed by [`COLAB-PRACTICE-NOTEBOOK-STANDARD.md`](./COLAB-PRACTICE-NOTEBOOK-STANDARD.md). Course-wide engineering principles are governed by [`COURSE-ENGINEERING-STANDARDS.md`](./COURSE-ENGINEERING-STANDARDS.md).
-
-## Legacy path policy
-
-The former duplicate frontier paths `31-loop-engineering` through `38-frontier-agentic-rag-capstone`, plus the obsolete `30-capstone` alias, have been removed from `main`. They are historical implementation paths only and must not be recreated.
-
-The canonical course now has **one physical directory per module 01–43**. If historical material is needed later, recover it from Git history and merge only the specific content that improves the canonical module.
-
-## Identity rule
-
-A canonical module's README title, notebook filename/metadata, tests and implementation references must agree on its canonical number and name. Historical numbering inside dated migration records is acceptable only when clearly labeled as historical.
-
-## Certification reminder
-
-Canonical structure is necessary but not sufficient for course quality. Structural QA, module tests, clean-kernel notebook runtime and aggregate CI must be complemented by manual semantic review before the course is called certified.
+Each of Modules 31–35 must expose a README, theory chapter, executable notebook, app boundary, tests, exercises, measurable outcomes and mastery gate. The notebook contract is **Predict → Build → Try → Break → Debug → Measure → Improve → Defend**.
