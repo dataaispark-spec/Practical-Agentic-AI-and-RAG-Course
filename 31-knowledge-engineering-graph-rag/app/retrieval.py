@@ -14,6 +14,7 @@ class EvidencePath:
 
 
 def shortest_paths(graph: KnowledgeGraph, start: str, target: str, tenant_id: str, max_hops: int = 3) -> list[EvidencePath]:
+    """Return bounded directed evidence paths with provenance."""
     if max_hops < 1 or max_hops > 5:
         raise ValueError("max_hops must be between 1 and 5")
     queue = deque([(start, (start,), (), ())])
@@ -26,15 +27,10 @@ def shortest_paths(graph: KnowledgeGraph, start: str, target: str, tenant_id: st
         if len(relations) >= max_hops:
             continue
         for edge in graph.edges:
-            if edge.tenant_id != tenant_id:
+            if edge.tenant_id != tenant_id or edge.source != node:
                 continue
-            if edge.source == node:
-                nxt, rel = edge.target, edge.relation
-            elif edge.target == node:
-                nxt, rel = edge.source, edge.relation
-            else:
-                continue
+            nxt = edge.target
             if nxt in nodes:
                 continue
-            queue.append((nxt, nodes + (nxt,), relations + (rel,), provenance + (edge.provenance,)))
+            queue.append((nxt, nodes + (nxt,), relations + (edge.relation,), provenance + (edge.provenance,)))
     return paths
