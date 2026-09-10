@@ -1,42 +1,73 @@
 # Module 39 — Skills, Memory & Continual Harnesses
 
-**Canonical implementation:** `39-skills-memory-continual-harnesses/`. Former `34-skills-memory-continual-harnesses/` is legacy only.
+**Canonical implementation:** `39-skills-memory-continual-harnesses/`
 
 ## Mission
-Make persistent knowledge and reusable procedures governed, versioned and reversible rather than silent sources of authority.
+Turn experience into governed reusable knowledge and procedures without allowing memory or learned skills to become silent authority.
+
+## Why this module matters
+A durable agent accumulates information. A production agent must know **what happened, what is believed, what procedure is trusted, what has expired, and what is allowed**. Memory, skill and policy are different artifacts.
 
 ## Learning outcomes
-Distinguish skills from memory; build candidate/trusted/rejected/deprecated states; require provenance and evaluation; support promotion, rollback, reuse, contradiction handling, forgetting and tenant/security controls.
+Design episodic/semantic/procedural memory; versioned skill registries; provenance and temporal validity; candidate/trusted/rejected/deprecated states; contradiction handling; tenant-aware retrieval; expiry/forgetting; promotion gates; regression suites; rollback and continual feedback loops.
 
-## Architecture
+## Core architecture
 ```text
-Experience → Candidate Skill → Evaluation/Verifier → Promotion Gate
-     ↓                              ↓                    ↓
-Memory ← Evidence/Outcome ← Regression Suite → Trusted Registry
+TRAJECTORY → EXPERIENCE → CANDIDATE MEMORY/SKILL
+                         ↓
+              PROVENANCE + VALIDATION
+                         ↓
+                  REGRESSION SUITE
+                         ↓
+               PROMOTE / REJECT / EXPIRE
+                         ↓
+              TRUSTED REGISTRY → HARNESS
+                         ↘ ROLLBACK
 ```
 
-## Labs
-1. Versioned skill registry.
-2. Candidate generation from successful trajectories.
-3. Provenance and confidence.
-4. Promotion gates.
-5. Contradictory skills/memory.
-6. Stale-procedure detection.
-7. Tenant-aware memory retrieval.
-8. Poisoned skill injection.
-9. Rollback after regression.
-10. Forgetting/expiry policy.
-11. Static vs continually learned skill benchmark.
-12. Reuse quality and cost measurement.
+**Invariant:** learned state can inform execution but cannot redefine identity, authorization, policy or budget.
 
-## Exercises
-Add skill versioning, provenance requirements, contradiction detection, tenant isolation, regression gates and rollback. Demonstrate that an untrusted memory item cannot silently become executable policy.
+## Component deep dive
+| Component | Responsibility | Failure prevented |
+|---|---|---|
+| Episodic memory | records events/outcomes | loss of experience |
+| Semantic memory | validated facts | repeated rediscovery |
+| Skill registry | reusable procedures | ad-hoc unsafe procedures |
+| Provenance | source/trajectory attribution | fabricated authority |
+| Promotion gate | trust transition | poisoned learning |
+| Regression suite | behavioral protection | skill regressions |
+| Expiry/revocation | lifecycle control | stale procedures |
+| Tenant scope | isolation | cross-customer leakage |
+
+Read [`theory/SKILLS-MEMORY-CONTINUAL-THEORY.md`](theory/SKILLS-MEMORY-CONTINUAL-THEORY.md).
+
+## Labs
+1. Memory taxonomy and ownership.
+2. Versioned skill registry.
+3. Candidate skill mined from trajectories.
+4. Provenance/confidence/temporal validity.
+5. Promotion gate with regression tests.
+6. Contradictory memory resolution.
+7. Stale-skill detection and expiry.
+8. Tenant-aware retrieval.
+9. Memory/skill poisoning.
+10. Rollback after regression.
+11. Static vs continual skill benchmark.
+12. Reuse quality/cost measurement.
+13. Forgetting policy design.
+14. Production continual-harness review.
+
+## Domain tracks
+SOC playbooks; SRE runbooks; customer support procedures; enterprise sales knowledge; synthetic regulated-workflow procedures.
+
+## Failure-first contract
+Inject poisoned memory, stale procedures, contradictory facts, cross-tenant hits, privilege drift and unsafe promotion. Capture detection, containment, recovery, regression and residual risk.
 
 ## Measures
-Promotion precision, regression rate, reuse success, stale-skill rate, rollback frequency, memory hit rate, latency, token cost and security violations.
+Promotion precision, regression rate, reuse success, stale rate, rollback success, memory hit rate, retrieval quality, latency, token cost and security violations.
 
-## Security
-Persistence expands attack surface: memory poisoning, skill injection, privilege drift and cross-tenant retrieval must be blocked by deterministic policy and verification.
+## Exercises
+Design a continual SOC playbook learner; define a promotion policy; prove a rejected skill cannot execute; measure whether memory actually improves task success enough to justify its maintenance cost.
 
 ## Mastery gate
-Implement and defend a continual harness in which learned state is attributable, evaluated, reversible, tenant-scoped and policy-bounded.
+Demonstrate attributable, evaluated, reversible, tenant-scoped memory and skills integrated into a governed harness.
