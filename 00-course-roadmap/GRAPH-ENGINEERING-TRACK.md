@@ -3,11 +3,11 @@
 **Scope:** Modules 31–35, with integration hooks into Modules 36–43  
 **Status:** normative subject-matter guidance  
 **Canonical branch:** `main`  
-**Updated:** 2026-09-09
+**Updated:** 2026-09-10
 
 The general engineering rules live in [`COURSE-ENGINEERING-STANDARDS.md`](./COURSE-ENGINEERING-STANDARDS.md). This track adds graph-specific concepts, failure modes and evidence.
 
-> **Graph engineering = extract structured knowledge, validate it, preserve provenance and time, retrieve bounded subgraphs, and use graph evidence under policy.**
+> **Graph engineering = extract structured knowledge, validate it, preserve provenance and time, retrieve bounded subgraphs, combine complementary retrieval signals, and use graph evidence under policy.**
 
 ## Two different graphs
 
@@ -28,13 +28,13 @@ Do not confuse a knowledge graph with a workflow graph. They answer different qu
 
 ## Module progression
 
-| Module | Primary focus | Distinct outcome |
+| Module | Primary focus | Distinct engineering outcome |
 |---:|---|---|
-| 31 | Knowledge Engineering & Graph RAG | typed knowledge model + bounded evidence retrieval |
-| 32 | Graph Engineering & Temporal Knowledge | ontology/entity-resolution evolution + valid-time semantics |
-| 33 | Agentic Knowledge Graph Construction | proposal → validation → promotion with provenance |
-| 34 | Graph + Vector Hybrid Retrieval | reproducible vector/graph/hybrid/rerank comparison |
-| 35 | Compounding Knowledge / LLM Wiki | maintained knowledge updates, contradictions, freshness and rollback |
+| 31 | Knowledge Engineering & Graph RAG | ontology + entities/claims + bounded graph evidence + GraphRAG decision |
+| 32 | Graph Engineering & Temporal Knowledge | temporal/bitemporal semantics + schema evolution + contradiction/supersession |
+| 33 | Agentic Knowledge Graph Construction | governed extraction + resolution + validation + approval + idempotent commit + rollback |
+| 34 | Graph + Vector Hybrid Retrieval | vector/graph baselines + RRF + reranking + multi-hop benchmark + retrieval economics |
+| 35 | Compounding Knowledge / LLM Wiki | maintained evidence-backed knowledge, context compilation and rollback |
 
 ## Knowledge lifecycle
 
@@ -51,72 +51,92 @@ provenance + temporal validity
   ↓
 validation / policy gate
   ↓
-KNOWLEDGE GRAPH
+VERSIONED KNOWLEDGE GRAPH
   ├── bounded graph retrieval
   └── vector retrieval
           ↓
       hybrid retrieval
           ↓
-        rerank
+        rerank / verify
           ↓
         agent
           ↓
-    verify / act under policy
+    validated write-back
           ↓
-      validated write-back
+      compounding knowledge
 ```
 
-Where relevant, graph records should preserve identifiers/types, `tenant_id`, `source_id`, claim/provenance references, confidence, valid-time fields, ACL and schema version.
+## Module 31 — explicit knowledge and GraphRAG
 
-## Graph correctness
+Teach ontology engineering, evidence/entity/claim separation, relation direction, entity identity, bounded traversal, multi-hop paths, graph-vs-vector decision science and evidence assembly. The learner must build and benchmark graph-only, vector-only and hybrid baselines.
 
-A graph is evidence, not unrestricted truth. Learners must distinguish:
+## Module 32 — temporal graph correctness
+
+Teach valid time, observation time, ingestion time and transaction time; supersession versus contradiction; entity merge/split; schema versioning/migration; temporal constraints; stale-edge detection; bounded traversal and graph health.
+
+## Module 33 — governed graph construction
+
+Teach agentic extraction as a proposal process. The model may propose; validators, provenance checks, tenant policy, risk gates, human approval and idempotent commit decide what becomes active. Rollback is a governed mutation and never history deletion.
+
+## Module 34 — hybrid retrieval economics
+
+Teach candidate union, Reciprocal Rank Fusion, score fusion, graph/path signals, reranking, multi-hop datasets and retrieval error decomposition. Hold evaluation conditions constant and report quality **and** operational cost. A hybrid architecture must be justified by evidence, not fashion.
+
+## Graph correctness invariants
+
+Learners must distinguish:
 
 - proposed vs validated knowledge;
-- source fact vs extracted claim;
+- source evidence vs extracted claim;
 - current vs historical relation;
 - supported vs unsupported inference;
 - duplicate entity vs same entity;
-- contradiction vs supersession.
+- contradiction vs supersession;
+- graph evidence vs authorization.
 
-## Temporal knowledge
-
-Teach valid-time explicitly. For example, one ownership relation can be valid through a historical interval and a replacement relation can begin later. A historical query and a current query must not silently return the same answer.
-
-Where transaction-time semantics are introduced, keep them conceptually distinct from valid-time semantics.
-
-## GraphRAG benchmark
-
-Use the same query set and compare, where meaningful:
-
-1. vector-only;
-2. graph-only;
-3. graph + vector;
-4. graph + vector + reranker/verifier.
-
-Measure task-relevant quality plus latency, traversal work, token/cost impact and maintenance/update cost. Explicitly report cases where adding a graph makes the system worse.
-
-## Compounding knowledge
-
-The course uses “Karpathy-inspired compounding knowledge” to describe the pattern of turning sources into maintained, linked, increasingly useful knowledge. It is **not** presented as an official methodology or attribution.
-
-The target loop is:
+## Security ordering
 
 ```text
-raw source
-→ curated knowledge
-→ entities / claims / relations / citations
-→ contradiction / change detection
-→ validated update
-→ change log / health report
-→ better future retrieval
+identity / tenant
+      ↓
+ACL / resource scope
+      ↓
+temporal / freshness constraints
+      ↓
+graph + vector candidate generation
+      ↓
+fusion / reranking
+      ↓
+bounded evidence context
+      ↓
+verification
 ```
 
-Core operations should include creating/updating an entity, resolving duplicates, adding a claim, linking evidence, adding/superseding a relation, recording contradictions, validating changes, bounded-neighborhood queries, provenance inspection and rollback.
+Never allow a graph edge, retrieved document, memory item or model-generated claim to grant permission.
+
+## Benchmark discipline
+
+For M31–M34, preserve a reproducible corpus/query/evaluator version and record:
+
+`quality | provenance | safety | latency | traversal work | tokens | cost | maintenance impact`
+
+Report negative results. If graph retrieval adds complexity but does not improve task success, the correct engineering decision may be **not to use a graph**.
+
+## Domain transfer
+
+Recommended shared schemas:
+
+- Cybersecurity: `Asset → Vulnerability → Control → Owner`;
+- Banking: `Customer → Account → Transaction → Case → Policy`;
+- Healthcare: `Drug/Patient → Condition/Encounter → Guideline/Evidence`;
+- Manufacturing: `Machine → Component → FailureMode → WorkOrder`;
+- Enterprise IT: `Service → Dependency → Incident → Team → Runbook`.
+
+Each domain should include normal cases, multi-hop cases, contradictory evidence, poisoned input and tenant/ACL tests.
 
 ## Failure / security lab
 
-Relevant failure classes include:
+Relevant classes:
 
 - duplicate entities and entity collisions;
 - wrong relation direction;
@@ -127,7 +147,9 @@ Relevant failure classes include:
 - cross-tenant leakage;
 - graph poisoning;
 - unbounded traversal;
-- cyclic or misleading inference.
+- candidate truncation before authorization;
+- reranker regression;
+- schema migration defects.
 
 ```text
 graph poisoning
@@ -142,7 +164,7 @@ The action remains subject to identity, authorization, policy, budget, approval,
 
 ## Vendor-neutral baseline
 
-The educational baseline should use Python plus local/synthetic fixtures and deterministic fake extraction where useful. Graph databases and query languages are optional extensions, not prerequisites for learning the mechanism.
+The educational baseline uses Python, local/synthetic fixtures and deterministic fake extraction where useful. Graph databases, Cypher, RDF/SPARQL and hosted vector stores are extension exercises rather than prerequisites for learning the mechanisms.
 
 ## Completion evidence
 
@@ -157,4 +179,6 @@ A graph-focused module is practice-complete when the learner can demonstrate:
 7. vector-vs-graph/hybrid evidence where applicable;
 8. graph health metrics;
 9. bad-update rollback/recovery;
-10. an ADR explaining when a graph is unnecessary.
+10. an ADR explaining when a graph is unnecessary;
+11. a domain-specific transfer exercise;
+12. executable notebook evidence following **Predict → Build → Try → Break → Debug → Measure → Improve → Defend**.
