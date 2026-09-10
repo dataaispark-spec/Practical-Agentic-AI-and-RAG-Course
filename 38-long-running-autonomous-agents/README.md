@@ -1,47 +1,82 @@
 # Module 38 — Long-Running Autonomous Agents
 
-**Canonical implementation:** `38-long-running-autonomous-agents/`. Former `33-long-running-autonomous-agents/` is legacy only.
+**Canonical implementation:** `38-long-running-autonomous-agents/`
 
 ## Mission
 Move from request/response agents to durable workers that can operate for hours or days while remaining bounded, observable, recoverable and governable.
 
-## Learning outcomes
-Implement durable GOAL/TASK/RUN/ATTEMPT/CHECKPOINT identities; leases, heartbeats, deadlines, multidimensional budgets, checkpoints, resumability, idempotent side effects, pause/resume/cancel, approvals, scheduling, stale-state detection, policy revalidation and audit reconstruction.
+## Why this module matters
+Long-running autonomy is a distributed-systems problem. A process restart, duplicate delivery, expired approval or timeout after an external write can change the meaning of the task. The learner must engineer **business-safe recovery**, not merely persistence.
 
-## Architecture
+## Learning outcomes
+Design GOAL/TASK/RUN/ATTEMPT/CHECKPOINT identities; durable state machines; leases and fencing; heartbeats; event-driven waiting; checkpoint/replay; idempotent effects; reconciliation; approval expiry; cumulative budgets; backpressure/DLQ; cancellation; stale-worker detection; disaster recovery and incident reconstruction.
+
+## Core architecture
 ```text
-Goal → Task → Durable Run → Lease/Heartbeat → Agent Loop
-                         ↓
-             Checkpoint → Tool/Environment → Verify
-                         ↓
-               Wait / Recover / Resume / Stop
+EVENT/SCHEDULE → DURABLE TASK → QUEUE → LEASE/FENCE → WORKER
+                                      ↓          ↓
+                                  CHECKPOINT   EFFECT
+                                      ↓          ↓
+                              WAIT/APPROVAL   VERIFY
+                                      ↓          ↓
+                             RESUME/RECOVER → COMPLETE/ESCALATE
 ```
 
-## Labs
-1. Durable lifecycle and state machine.
-2. Worker leases and heartbeats.
-3. Duplicate-delivery/idempotency handling.
-4. Crash recovery at side-effect boundaries.
-5. Human approval persistence and expiry.
-6. Event-driven waiting and scheduling.
-7. Context compaction without losing authoritative state.
+**Invariant:** restart must never silently duplicate a protected external effect or resurrect expired authority.
+
+## Component deep dive
+| Component | Responsibility | Failure prevented |
+|---|---|---|
+| Durable task | stable objective/scope | lost work |
+| Attempt | execution identity | ambiguous retries |
+| Lease/fence | exclusive authority | zombie writes |
+| Checkpoint | semantic recovery state | incorrect resume |
+| Effect ledger | idempotency/reconciliation | duplicate side effects |
+| Wait state | durable suspension | busy-looping |
+| Budget ledger | cumulative limits | runaway cost |
+| DLQ | terminal retry isolation | retry storms |
+| Audit trail | reconstruction | invisible failures |
+
+Read [`theory/LONG-RUNNING-AUTONOMY-THEORY.md`](theory/LONG-RUNNING-AUTONOMY-THEORY.md) before implementation.
+
+## Practical labs
+1. Durable lifecycle/state machine.
+2. Lease + fencing race.
+3. Crash before/during/after effect.
+4. Timeout-after-write reconciliation.
+5. Approval persistence and expiry.
+6. Event/timer/webhook waiting.
+7. Context compaction with authoritative-state preservation.
 8. Goal-drift detection.
-9. Multidimensional budget exhaustion.
-10. Stale worker/zombie detection.
-11. Reconciliation after uncertain external effects.
-12. Replay and incident reconstruction.
-13. Chaos/failure injection.
-14. Recovery benchmark.
+9. Multidimensional cumulative budgets.
+10. Zombie worker detection.
+11. Backpressure and DLQ.
+12. Provider outage and backlog recovery.
+13. 24-hour economics simulation.
+14. Chaos/recovery benchmark.
 15. Production architecture review.
 
-## Exercises
-Break duplicate execution, split brain, lost progress, stale policy, stale knowledge, infinite autonomy, zombie workers and uncertain external side effects. Document detection, containment and recovery.
+## Domain tracks
+- Banking: settlement/reconciliation worker.
+- Cybersecurity: persistent SOC investigation.
+- SRE: overnight remediation/migration.
+- Enterprise IT: ticket and change-management worker.
+- Research: multi-stage evidence collection with approval waits.
+
+## Failure-first contract
+Inject duplicate delivery, split brain, stale policy, checkpoint corruption, provider outage, tool timeout, approval expiry, cancellation race and uncertain external effects. Record **detection → containment → recovery → regression → residual risk**.
 
 ## Measures
-Completion rate, duplicate side effects, recovery success, recovery time, checkpoint overhead, escalation rate, cost/run and stale-state rate.
+Resume success, duplicate-effect rate, recovery success, recovery time, stale-worker rate, checkpoint overhead, escalation rate, backlog depth, cost/run and SLA compliance.
+
+## Exercises
+Design an overnight reconciliation platform for millions of records; compare snapshot checkpoints vs event sourcing; calculate retry amplification; design RPO/RTO; prove effectively-once business semantics.
 
 ## Security
-Persistence changes the threat model: approvals, permissions, policy versions, expiry and tenant boundaries must survive restarts. A resumed run must revalidate authority rather than trusting stale state.
+Persisted state is security-sensitive. Revalidate tenant, permissions, policy version and approvals on resume. Never trust a stored model message as authority.
+
+## Deliverables
+Theory note, executable notebook, deterministic worker implementation, tests, recovery matrix, chaos evidence, cost model and production ADR.
 
 ## Mastery gate
-Demonstrate safe stop/restart/wait/resume, bounded autonomy, no duplicate side effects, policy revalidation and reconstructable execution history.
+Demonstrate safe stop/wait/resume/restart, no duplicate protected effects, stale-worker fencing, authority revalidation, bounded economics and reconstructable history.
