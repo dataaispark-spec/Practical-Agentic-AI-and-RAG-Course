@@ -1,192 +1,160 @@
 # Module 38 — Long-Running Autonomous Agents
 
-**Canonical path:** `38-long-running-autonomous-agents/`
+## Module boundary
 
-## 1. Mission
+M38 teaches how to turn an agent into a **durable, bounded, recoverable worker** that can run across crashes, retries, waiting periods and changing authorization. The module is about long-running execution semantics—not knowledge compounding, skills, continual learning, recursive self-improvement, computer use, or reinforcement learning.
 
-Turn a short-lived agent into a **durable autonomous worker** that can operate for hours or days without losing task meaning when the process crashes, a dependency times out, an approval expires, a worker becomes stale, or an external side effect has an uncertain outcome.
+## Why this is hard
 
-This module is deliberately taught as a **distributed-systems + agent-harness problem**. An LLM may propose what to do; durable control-plane mechanisms decide whether, when and under what authority it may happen.
+A short-lived agent can keep most state in process memory. A long-running agent cannot. Between two steps, the process may die, a worker may be replaced, a lease may expire, an external write may have happened without a response, an approval may become invalid, or a dependency may remain unavailable for hours. Recovery must preserve **business semantics**, not merely program counters.
 
-## 2. What learners must be able to explain
+## Learning outcomes
 
 By the end, learners can:
 
-1. distinguish goal, task, run, attempt, checkpoint and effect identity;
-2. model a durable state machine with explicit terminal and waiting states;
-3. explain why at-least-once delivery is normal and why "exactly once" execution is usually the wrong promise;
-4. implement effectively-once business semantics with idempotency keys, effect ledgers and reconciliation;
-5. prevent zombie workers with leases, heartbeats and fencing tokens;
-6. make waiting durable instead of consuming an active worker indefinitely;
-7. revalidate policy, tenant, scope and human approval after every resume boundary;
-8. carry cumulative token/tool/time/money budgets across restarts;
-9. design retries, backpressure, DLQs, cancellation and escalation as control-plane behavior;
-10. reconstruct an incident from durable state, effect records and an append-only audit trail;
-11. reason about RPO/RTO, multi-region recovery and disaster scenarios;
-12. benchmark recovery correctness, latency, cost and duplicate-effect risk.
+1. Model `GOAL → TASK → RUN → ATTEMPT → CHECKPOINT → EFFECT → VERIFICATION`.
+2. Design durable state machines and explicit wait/resume/cancel semantics.
+3. Explain at-least-once delivery versus exactly-once execution and effectively-once business effects.
+4. Implement stable effect identities, idempotency and timeout-after-write reconciliation.
+5. Implement leases, heartbeats and fencing to reject zombie workers.
+6. Revalidate tenant, identity, policy version and approval before resuming sensitive work.
+7. Enforce cumulative time, tool, token and monetary budgets across restarts.
+8. Design backpressure, bounded retries and dead-letter handling.
+9. Reconstruct incidents from durable state, effect records and traces.
+10. Defend RPO/RTO, SLO, cost and failure semantics for production-scale workers.
 
-## 3. Mental model
+## Core architecture
 
 ```text
-                  CONTROL PLANE
-Goal → Task → Run → Policy → Budget → Lease/Fence → Decision
-                       │                         │
-                       ▼                         ▼
-                 Durable State              Action Gateway
-                       │                         │
-                       ▼                         ▼
-              Checkpoint / Wait ←────── Effect Ledger ──────→ External System
-                       │                         │
-                       └────────── Verify / Reconcile ──────┘
-                                      │
-                         Complete / Retry / Recover /
-                         Replan / Escalate / Cancel
+Trigger
+  ↓
+Durable Task ──→ Queue ──→ Lease/Fence ──→ Worker
+     │                         │              │
+     ├── policy/approval ──────┘              │
+     ├── cumulative budget ───────────────────┤
+     └── checkpoint / wait                    ↓
+                                      Action Gateway
+                                             ↓
+                                       Effect Ledger
+                                             ↓
+                                       External API
+                                             ↓
+                                     Verify / Reconcile
+                                             ↓
+                              Checkpoint / Retry / Recover
+                                             ↓
+                                   Complete / Escalate / DLQ
 ```
 
-**Core invariant:** a restart may repeat computation, but it must not silently repeat a protected business effect or resurrect expired authority.
+**Primary invariant:** a restart must not silently duplicate a protected business effect or resurrect expired authority.
 
-## 4. Durable state contract
+## Durable state model
 
-Use the identity chain:
+A checkpoint is semantic recovery state. It should identify the task version, current state, completed effects, uncertain effects, pending work, authority/policy version, cumulative budgets and recovery position. A counter such as `step=37` is not enough to establish safe recovery.
 
-`GOAL → TASK → RUN → ATTEMPT → CHECKPOINT → EFFECT → VERIFICATION`
+| Identity | Purpose |
+|---|---|
+| Goal ID | stable business objective |
+| Task ID | scoped executable contract |
+| Run ID | logical execution lifecycle |
+| Attempt ID | worker execution attempt |
+| Checkpoint ID | recoverable state snapshot/version |
+| Effect ID | stable external business-effect identity |
+| Fence token | current worker authority |
+| Approval ID | authorization bound to exact action/version |
 
-A checkpoint is **semantic recovery state**, not just `step=37`. It should preserve at least:
+## Exactly-once reality
 
-- task and tenant identity;
-- task/schema/state version;
-- current state and recovery position;
-- completed and uncertain effects;
-- idempotency keys;
-- policy/permission version;
-- approval binding and expiry information;
-- cumulative budgets and deadlines;
-- pending external events;
-- correlation/trace identifiers.
+Teach the guarantee boundary explicitly:
 
-## 5. Reference implementation
+- **Delivery:** queues commonly provide at-least-once delivery.
+- **Execution:** a worker can crash or be retried.
+- **Effect:** an external system may commit before the client receives a response.
+- **Business semantics:** stable effect IDs, idempotent APIs and reconciliation can provide effectively-once behavior for a defined business operation.
 
-`app/worker.py` is a deterministic, dependency-free teaching implementation. It demonstrates:
+Do not claim universal exactly-once execution across arbitrary distributed systems.
 
-- `DurableStore` as an authoritative state store;
-- lease acquisition, renewal and fencing;
-- monotonic checkpoints;
-- an effect ledger with `pending/applied/unknown/reconciled` states;
-- timeout-after-write reconciliation;
-- pause/resume/cancel;
-- approval binding to an action hash and policy version;
-- cumulative step/tool/cost budgets;
-- retry-amplification calculation.
+## Recovery matrix
 
-It is intentionally **not** presented as a production database or queue. The learner must map the same invariants to PostgreSQL/Redis/Kafka/workflow engines/cloud queues in the architecture exercises.
-
-## 6. Failure semantics — the heart of the module
-
-| Failure boundary | Unsafe naive behavior | Correct teaching pattern |
+| Failure point | Correct reasoning | Recovery pattern |
 |---|---|---|
-| before external effect | retry | retry with stable effect ID |
-| during effect | assume failure | mark outcome uncertain and reconcile |
-| after effect, before checkpoint | execute again | consult effect ledger/idempotency record |
-| after checkpoint, before verification | trust state | re-verify externally |
-| worker pause after lease expiry | continue writing | fencing rejects stale writer |
-| approval expires while waiting | reuse approval | stop and obtain fresh approval |
-| policy changes during downtime | resume blindly | re-authorize against current policy |
-| provider outage | uncontrolled retries | bounded retry + backpressure + escalation |
-| cancellation race | partial/unknown semantics | define per-effect cancellation contract |
-| corrupted checkpoint | execute arbitrary state | schema/version/provenance validation |
+| Before effect | no protected effect committed | retry if still authorized |
+| During effect | outcome may be unknown | reconcile before retry |
+| After effect, before checkpoint | effect may already exist | effect ledger/idempotency lookup |
+| After checkpoint, before verification | state may be ahead of verification | re-verify |
+| Lease expired | worker may be stale | fence old worker; new owner resumes |
+| Approval expired | authority no longer valid | stop and request fresh approval |
+| Policy changed | prior decision may be invalid | revalidate policy before effect |
+| Dependency outage | retries can amplify load | backoff, queue, pause or escalate |
+| Cancellation race | effect may be irreversible | classify state; do not assume rollback |
 
-## 7. Labs — 15 increasing-difficulty builds
+## Labs
 
-1. **Durable lifecycle:** implement `created → running → waiting → completed/failed/cancelled/dead-letter`.
-2. **Checkpoint recovery:** compare every-step, every-N and event-log recovery.
-3. **Crash matrix:** inject failures before, during and after effects.
-4. **Effect ledger:** prove a retry cannot duplicate a protected effect.
-5. **Timeout-after-write:** reconcile an external correction whose response was lost.
-6. **Lease + fencing:** create a split-brain worker race and reject the stale writer.
-7. **Durable waiting:** sleep for approval, timer, webhook and customer response without holding a worker.
-8. **Authority revalidation:** invalidate an approval or policy version while the job is asleep.
-9. **Cumulative economics:** carry token/tool/compute/money limits across multiple attempts.
-10. **Backpressure:** process a 10,000-event burst without retry amplification or unbounded concurrency.
-11. **Provider outage:** compare pause, fallback, queue, degradation and escalation policies.
-12. **Long-horizon migration:** make every migration stage resumable with pre/postconditions and rollback.
-13. **Stale/poisoned state:** attack persisted checkpoints and require provenance + schema validation.
-14. **Incident reconstruction:** rebuild a failure timeline from state, effects and trace events.
-15. **Chaos day:** combine lease loss, duplicate delivery, outage, approval expiry, cancellation and uncertain effects.
+### Foundation
+1. Durable task lifecycle and state machine.
+2. Semantic checkpoints and recovery positions.
+3. Stable effect identity and idempotency.
+4. Crash-before/during/after-effect matrix.
 
-## 8. Domain labs
+### Distributed-systems mechanics
+5. Timeout-after-write reconciliation.
+6. Lease, heartbeat and fencing race.
+7. Durable waiting for approval, timer and webhook.
+8. Stale-worker and stale-checkpoint rejection.
 
-See [`domain-labs/README.md`](domain-labs/README.md) for detailed tracks in:
+### Production controls
+9. Cumulative budgets and retry amplification.
+10. Backpressure, fairness, bounded retries and DLQ.
+11. Cancellation and irreversible-effect semantics.
+12. Provider outage and backlog recovery.
 
-- banking settlement/reconciliation;
-- cybersecurity/SOC investigations;
-- SRE migration and remediation;
-- enterprise IT change management;
-- research/evidence collection.
+### Long-horizon operations
+13. Resumable migration with pre/postconditions.
+14. Incident reconstruction from durable evidence.
+15. Multi-failure chaos day and production architecture review.
 
-Each track requires a **failure matrix + recovery proof + SLO/cost analysis**, not merely a working happy path.
+## Domain labs
 
-## 9. Benchmarking
+- **Banking:** settlement-exception reconciliation with timeout-after-write and approval expiry.
+- **Cybersecurity:** persistent SOC investigation with policy revalidation before containment.
+- **SRE:** overnight migration/remediation with rollback classification and SLA budget.
+- **Enterprise IT:** durable change-management workflow with CAB approval and fencing.
+- **Research:** long-running evidence collection with provenance and durable waits.
 
-See [`benchmarks/README.md`](benchmarks/README.md). Measure:
+Each domain lab must produce a failure matrix, recovery proof, metrics, cost/SLO analysis and residual-risk statement.
 
-- duplicate protected effects;
-- recovery correctness and resume distance;
-- recovery time;
-- stale-worker rejection;
-- uncertain-effect reconciliation rate;
-- checkpoint overhead;
-- queue backlog and p95 latency;
-- cost per completed task;
-- SLA/SLO compliance;
-- retry amplification.
+## Engineering implementation
 
-Never report a benchmark without workload size, seed, failure injection point, environment and recovery evidence.
+The reference implementation is deterministic and dependency-light. It exposes the mechanisms directly rather than hiding them behind an orchestration framework: state transitions, effect ledger, lease/fence checks, reconciliation and budget accounting.
 
-## 10. Security model
+## Failure-first requirements
 
-Long-running state is an **authority-bearing security boundary**. Treat stored model output as untrusted data. On resume, re-check tenant isolation, object scope, permissions, policy version, approval freshness and action hash. Protect effect ledgers and checkpoints from tampering. Audit both accepted and rejected actions.
+Inject duplicate delivery, crash-after-effect, timeout-after-write, lease loss, stale worker, expired approval, policy change, corrupted checkpoint, provider outage, cancellation race, budget exhaustion and retry storm.
 
-Threats include stale authority, checkpoint poisoning, cross-tenant replay, lease hijacking, duplicate financial effects, approval replay, budget bypass and malicious wake-up/event injection.
+For every failure record:
 
-## 11. Production architecture exercise
+`detection → containment → recovery decision → evidence → regression test → residual risk`.
 
-Design a multi-region service processing millions of durable tasks. Defend:
+## Measurement
 
-- queue semantics and ordering requirements;
-- task/effect identity and idempotency boundaries;
-- lease/fencing implementation;
-- storage consistency model;
-- event-driven waiting;
-- retry/backoff/DLQ policy;
-- cumulative budgets;
-- cancellation semantics;
-- tenant isolation and authorization revalidation;
-- audit/event retention;
-- RPO/RTO and region failover;
-- observability and incident reconstruction;
-- cost and capacity model.
+Track recovery success rate, duplicate protected-effect rate, uncertain-effect reconciliation rate, stale-worker rejection rate, resume latency, recovery time, checkpoint write amplification, replay distance, queue age, retry amplification, cost per completed task, escalation/DLQ rate and SLO compliance.
 
-## 12. Deliverables
+## Security boundary
 
-- theory notes;
-- executable Colab notebook;
-- deterministic reference implementation;
-- comprehensive tests;
-- failure/recovery matrix;
-- domain-lab evidence pack;
-- benchmark results with reproducibility metadata;
-- security/threat model;
-- production architecture decision record;
-- mastery-gate defense.
+Persisted state is untrusted input. On resume, validate schema/version, tenant scope, identity, authorization, policy version and approval freshness. Never treat an old model-generated message as durable authority. High-impact actions must be bound to an exact action representation and current policy.
 
-## 13. Mastery gate
+## L7 system design
 
-A learner passes only when they can **demonstrate and explain** safe stop/wait/resume/restart, timeout-after-write reconciliation, stale-worker fencing, approval/policy revalidation, cumulative budget enforcement, cancellation semantics and reconstructable recovery history.
+Design a multi-region durable-agent platform processing millions of tasks under at-least-once delivery. Defend storage consistency, fencing, idempotency, ordering, event-driven waiting, retries/DLQ, tenant isolation, approval revalidation, observability, RPO/RTO, failover and economics. State which guarantees are impossible or conditional.
 
-### L7 challenge
+## Required deliverables
 
-Design and defend a multi-region durable-agent platform for millions of tasks under at-least-once delivery. The design must remain safe when a worker crashes after an external write, a lease expires during a network partition, a human approval becomes stale, a provider is unavailable for an hour, and one region is lost. Quantify the residual risk rather than claiming impossible guarantees.
+Theory notes; executable Colab notebook; deterministic reference implementation; comprehensive tests; recovery matrix; five domain labs; reproducible benchmark; chaos evidence; production ADR; mastery evidence pack.
 
-## Module handoff
+## Mastery gate
 
-M38 supplies the **durability substrate** for later modules: M39 adds skills/memory/continual state, M40 adds environments and verifiers, M41 adds controlled self-improvement, M42 adds computer-use action loops, and M43 composes the full frontier system.
+Pass only when the learner demonstrates safe stop/wait/resume/restart, no duplicate protected effects under tested failure modes, timeout-after-write reconciliation, stale-worker fencing, authority revalidation, cumulative budget enforcement, explicit cancellation semantics, bounded retries/backpressure and reconstructable history.
+
+## Explicit exclusions
+
+M38 does **not** teach continual learning, skills systems, recursive self-improvement, agentic RL, computer-use automation, multi-agent coordination or knowledge-graph construction. Those belong to other modules and should not be duplicated here.
