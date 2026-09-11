@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from app.worker import DurableJob, DurableWorker
+from app.worker import DurableJob, DurableWorker, Status
 
 
 def run() -> dict[str, float]:
@@ -16,7 +16,7 @@ def run() -> dict[str, float]:
     job = DurableJob("benchmark-001", "reconcile", total_steps=100)
     started = time.perf_counter()
     worker.run(job, steps=100, crash_after_effect_at=49)
-    job.status = job.status.CREATED
+    job.status = Status.CREATED
     worker.run(job, steps=100)
     elapsed = time.perf_counter() - started
 
@@ -25,7 +25,7 @@ def run() -> dict[str, float]:
         "effects_attempted": float(len(calls)),
         "unique_effects": float(unique),
         "duplicate_effects": float(len(calls) - unique),
-        "recovery_success": float(job.status == job.status.COMPLETED),
+        "recovery_success": float(job.status is Status.COMPLETED),
         "elapsed_seconds": elapsed,
     }
 
